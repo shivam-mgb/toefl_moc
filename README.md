@@ -10,3 +10,4 @@ The purpose of this simulator is to help students prepare for the TOEFL iBT test
 * Providing realistic practice: Users can practice under timed conditions and receive estimated scores to gauge their performance.
 * Targeting specific areas for improvement: Users can focus on practicing individual sections or task types to improve their skills in specific areas.
 * Offering a convenient and accessible platform: The web application allows users to practice anytime, anywhere, with an internet connection.
+
