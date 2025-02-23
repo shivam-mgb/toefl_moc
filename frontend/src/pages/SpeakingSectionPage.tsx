@@ -1,20 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import TopMenu from '../components/TopMenu';
 import SpeakingTaskPage from './SpeakingTaskPage';
-
-// Task type definitions
-type SpeakingTaskType = 'independent' | 'integrated';
-
-interface TaskConfig {
-  id: string;
-  type: SpeakingTaskType;
-  title: string;
-  prepTime: number;  // in seconds
-  responseTime: number;
-  prompt: string;
-  readingPassage?: string;
-  audioUrl?: string;
-}
+import { TaskConfig } from '../types/speaking';
 
 // Task configurations
 const TASK_CONFIGS: TaskConfig[] = [
@@ -132,4 +119,4 @@ const SpeakingSectionPage: React.FC = () => {
   );
 };
 
-export default SpeakingSectionPage; 
+export default SpeakingSectionPage;

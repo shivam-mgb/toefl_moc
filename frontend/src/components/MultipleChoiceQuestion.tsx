@@ -3,8 +3,9 @@ import React from 'react';
 interface MultipleChoiceQuestionProps {
     questionText: string;
     options: { id: string; text: string }[];
-    selectedAnswer: string | null;
+    selectedAnswer: string | string[] | null;
     onAnswerChange: (answerId: string) => void;
+    isMultipleChoice?: boolean;
 }
 
 const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
@@ -12,7 +13,20 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
     options,
     selectedAnswer,
     onAnswerChange,
+    isMultipleChoice,
 }) => {
+    const isChecked = (optionId: string) => {
+        if (isMultipleChoice) {
+            return Array.isArray(selectedAnswer) ? selectedAnswer.includes(optionId) : false;
+        } else {
+            return selectedAnswer === optionId;
+        }
+    };
+
+    const handleChange = (optionId: string) => {
+        onAnswerChange(optionId);
+    };
+
     return (
         <div className="bg-white shadow-md rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-4">{questionText}</h3>
@@ -20,12 +34,12 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
                 {options.map((option) => (
                     <label key={option.id} className="flex items-center space-x-2">
                         <input
-                            type="radio"
+                            type={isMultipleChoice ? "checkbox" : "radio"}
                             name="answer"
                             value={option.id}
-                            checked={selectedAnswer === option.id}
-                            onChange={() => onAnswerChange(option.id)}
-                            className="form-radio h-5 w-5 text-teal-600"
+                            checked={isChecked(option.id)}
+                            onChange={() => handleChange(option.id)}
+                            className={`form-checkbox h-5 w-5 text-teal-600`}
                         />
                         <span>{option.text}</span>
                     </label>

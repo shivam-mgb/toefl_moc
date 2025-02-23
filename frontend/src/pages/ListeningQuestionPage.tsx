@@ -98,10 +98,30 @@ const ListeningQuestionPage: React.FC<ListeningQuestionPageProps> = ({
     };
 
     const handleMultipleChoiceAnswerChange = (questionId: string, answerId: string) => {
-        setSelectedAnswers(prev => ({
-            ...prev,
-            [questionId]: answerId
-        }));
+        setSelectedAnswers(prev => {
+            const question = trackConfig.questions.find(q => q.id === questionId);
+            const isMultipleChoice = question?.type === 'multiple-choice-multiple-answer';
+
+            if (isMultipleChoice) {
+                const selectedAnswersArray = (prev[questionId] || []) as string[];
+                if (selectedAnswersArray.includes(answerId)) {
+                    return {
+                        ...prev,
+                        [questionId]: selectedAnswersArray.filter(id => id !== answerId)
+                    };
+                } else {
+                    return {
+                        ...prev,
+                        [questionId]: [...selectedAnswersArray, answerId]
+                    };
+                }
+            } else {
+                return {
+                    ...prev,
+                    [questionId]: answerId
+                };
+            }
+        });
     };
 
     const renderQuestionComponent = (question: Question | TableCompletionQuestionType) => {
@@ -124,8 +144,9 @@ const ListeningQuestionPage: React.FC<ListeningQuestionPageProps> = ({
                     <MultipleChoiceQuestion
                         questionText={question.text}
                         options={question.options}
-                        selectedAnswer={selectedAnswers[question.id] || null}
+                        selectedAnswer={selectedAnswers[question.id] || []}
                         onAnswerChange={(answerId) => handleMultipleChoiceAnswerChange(question.id, answerId)}
+                        isMultipleChoice={question.type === 'multiple-choice-multiple-answer'}
                     />
                 );
             default:

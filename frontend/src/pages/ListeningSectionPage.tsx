@@ -338,6 +338,18 @@ const TRACK_CONFIGS: TrackConfig[] = [
                 ],
                 hasAudioSnippet: false,
                 type: 'single-choice',
+            },
+            {
+                id: 'conv2-q6',
+                text: 'Which of the following topics were discussed in the conversation? (Select all that apply)',
+                options: [
+                    { id: 'conv2-q6-a', text: 'Assignment extension' },
+                    { id: 'conv2-q6-b', text: 'Lecture clarification' },
+                    { id: 'conv2-q6-c', text: 'Test grade discussion' },
+                    { id: 'conv2-q6-d', text: 'Research paper advice' }
+                ],
+                hasAudioSnippet: false,
+                type: 'multiple-choice-multiple-answer',
             }
         ]
     },
@@ -421,6 +433,18 @@ const TRACK_CONFIGS: TrackConfig[] = [
                 ],
                 hasAudioSnippet: false,
                 type: 'single-choice',
+            },
+             {
+                id: 'lec3-q7',
+                text: 'Which of the following concepts were discussed in the lecture? (Select all that apply)',
+                options: [
+                    { id: 'lec3-q7-a', text: 'Keynesian economics' },
+                    { id: 'lec3-q7-b', text: 'Supply-side economics' },
+                    { id: 'lec3-q7-c', text: 'Monetarism' },
+                    { id: 'lec3-q7-d', text: 'Behavioral economics' }
+                ],
+                hasAudioSnippet: false,
+                type: 'multiple-choice-multiple-answer',
             }
         ]
     }
@@ -434,18 +458,6 @@ const ListeningSectionPage: React.FC = () => {
     const [hasStarted, setHasStarted] = useState(false);
 
     const currentTrack = TRACK_CONFIGS[currentTrackIndex];
-
-    useEffect(() => {
-        if (sectionTimeRemaining > 0 && !sectionComplete) {
-            const timer = setTimeout(() => {
-                setSectionTimeRemaining((prev) => prev - 1);
-            }, 1000);
-
-            return () => clearTimeout(timer);
-        }
-    }, [sectionTimeRemaining, sectionComplete]);
-
-    // Auto-start audio on component mount
     useEffect(() => {
         if (currentTrack.audioSrc && !hasStarted) {
             setHasStarted(true);
