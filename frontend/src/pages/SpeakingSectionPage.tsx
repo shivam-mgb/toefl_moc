@@ -8,38 +8,41 @@ const TASK_CONFIGS: TaskConfig[] = [
   {
     id: 'task1',
     type: 'independent',
-    title: 'Independent Speaking Task',
+    title: 'Task 1: Independent Speaking - Personal Experience/Opinion',
     prepTime: 15,
     responseTime: 45,
-    prompt: 'Describe a place you enjoy visiting. Explain why it is meaningful to you and provide specific details about what makes it special.'
+    prompt: 'Describe a time when you faced a difficult challenge. What did you do to overcome it, and what did you learn from the experience?'
   },
   {
     id: 'task2',
-    type: 'independent',
-    title: 'Independent Speaking Task',
-    prepTime: 15,
-    responseTime: 45,
-    prompt: 'Some people prefer to travel alone, while others prefer to travel with companions. Which do you prefer and why?'
+    type: 'integrated',
+    title: 'Task 2: Integrated Speaking - Reading & Listening & Speaking (Campus Situation)',
+    prepTime: 30,
+    responseTime: 60,
+    readingPassage: 'Reading passage about a proposed change to university library hours...',
+    audioUrl: '/audio/task2.mp3',
+    prompt: 'The university is planning to change the library hours. Explain the proposal and give your opinion.',
+    readingTime: 45
   },
   {
     id: 'task3',
     type: 'integrated',
-    title: 'Integrated Speaking Task',
+    title: 'Task 3: Integrated Speaking - Academic Lecture',
     prepTime: 30,
     responseTime: 60,
-    prompt: 'Summarize the main points from the reading and listening passages, explaining how they relate to each other.',
-    readingPassage: 'Reading passage about university policy change...',
-    audioUrl: '/audio/task3-conversation.mp3'
+    readingPassage: 'Reading passage about the concept of cognitive dissonance...',
+    audioUrl: '/audio/task3.mp3',
+    prompt: 'Explain the concept of cognitive dissonance and provide an example from the lecture.',
+    readingTime: 45
   },
   {
     id: 'task4',
     type: 'integrated',
-    title: 'Integrated Speaking Task',
-    prepTime: 30,
+    title: 'Task 4: Integrated Speaking - Academic Lecture (Concept/Process)',
+    prepTime: 20,
     responseTime: 60,
-    prompt: 'Explain how the example in the lecture illustrates the concept defined in the reading passage.',
-    readingPassage: 'Reading passage about scientific concept...',
-    audioUrl: '/audio/task4-lecture.mp3'
+    audioUrl: '/audio/task4.mp3',
+    prompt: 'Describe the process of photosynthesis, using examples from the lecture.'
   }
 ];
 

@@ -22,10 +22,11 @@ const SpeakingTaskPage: React.FC<SpeakingTaskPageProps> = ({
   sectionTimer,
   onTaskComplete
 }) => {
-  const [isPreparationPhase, setIsPreparationPhase] = useState(true);
+  const [isReadingPhase, setIsReadingPhase] = useState(!!taskConfig.readingPassage);
+  const [isPreparationPhase, setIsPreparationPhase] = useState(false);
   const [isRecordingPhase, setIsRecordingPhase] = useState(false);
   const [hasRecording, setHasRecording] = useState(false);
-  const [readingTimeRemaining, setReadingTimeRemaining] = useState(10);
+  const [readingTimeRemaining, setReadingTimeRemaining] = useState(taskConfig.readingTime || 0);
   const [preparationTimeRemaining, setPreparationTimeRemaining] = useState(taskConfig.prepTime);
   const [recordingTimeRemaining, setRecordingTimeRemaining] = useState(5);
   const [recordedAudio, setRecordedAudio] = useState<string | null>(null);
@@ -45,6 +46,17 @@ const SpeakingTaskPage: React.FC<SpeakingTaskPageProps> = ({
   };
 
   useEffect(() => {
+    if (isReadingPhase && readingTimeRemaining > 0) {
+      const timer = setTimeout(() => {
+        setIsReadingPhase(false);
+        setIsPreparationPhase(true);
+      }, readingTimeRemaining * 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isReadingPhase, readingTimeRemaining]);
+
+  useEffect(() => {
     if (isPreparationPhase && preparationTimeRemaining > 0) {
       const timer = setTimeout(() => {
         setIsPreparationPhase(false);
@@ -55,50 +67,40 @@ const SpeakingTaskPage: React.FC<SpeakingTaskPageProps> = ({
     }
   }, [isPreparationPhase, preparationTimeRemaining]);
 
-  const handleStartRecording = () => {
-    setIsRecordingPhase(true);
-  };
-
-  const handleStopRecording = () => {
-    setIsRecordingPhase(false);
-    setHasRecording(true);
-  };
-
-  // Placeholder handlers
   const handleNext = () => {
-    if (isPreparationPhase) {
-      setIsPreparationPhase(false);
-      setIsRecordingPhase(true);
-      return;
-    }
-
-    if (isRecordingPhase) {
-      setIsRecordingPhase(false);
-      setHasRecording(true);
+    if (isReadingPhase) {
+      setIsReadingPhase(false);
+      setIsPreparationPhase(true);
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
-      {/* Top Menu */}
       <TopMenu
         sectionTitle="Speaking Section"
         questionProgress={sectionProgress}
         timer={sectionTimer}
       />
 
-      {/* Main Content */}
       <main className="flex-grow container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-8">
-          {/* Task Title */}
           <h1 className="text-2xl font-bold text-gray-800 text-center">
             {taskConfig.title}
           </h1>
 
-          {/* Task Content */}
-          <TaskPromptArea promptText={taskConfig.prompt} />
-          {isPreparationPhase ? (
+          {isReadingPhase && taskConfig.readingPassage ? (
             <>
+              <div className="text-gray-700">
+                {taskConfig.readingPassage}
+              </div>
+              <div className="text-gray-600">
+                Time remaining: {readingTimeRemaining} seconds
+              </div>
+              <button onClick={handleNext}>Next</button>
+            </>
+          ) : isPreparationPhase ? (
+            <>
+              <TaskPromptArea promptText={taskConfig.prompt} />
               <PreparationTimerArea timeRemaining={preparationTimeRemaining} />
             </>
           ) : isRecordingPhase ? (
@@ -116,21 +118,14 @@ const SpeakingTaskPage: React.FC<SpeakingTaskPageProps> = ({
                   onPause={handlePause}
                 />
               )}
-              <button onClick={handleNext}>Next</button>
+              <Navigation
+                onNext={onTaskComplete}
+                isNextDisabled={!hasRecording}
+              />
             </>
           )}
         </div>
       </main>
-
-      {/* Navigation */}
-      <div className="border-t border-gray-200 bg-white">
-        <div className="container mx-auto px-4">
-          <Navigation
-            onNext={handleNext}
-            isNextDisabled={!hasRecording}
-          />
-        </div>
-      </div>
     </div>
   );
 };
