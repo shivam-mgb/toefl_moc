@@ -31,8 +31,10 @@ const ListeningQuestionPage: React.FC<ListeningQuestionPageProps> = ({
     );
 
     useEffect(() => {
-        if (trackConfig.audioSrc) {
+        if (trackConfig) {
             setIsPlaying(true);
+            setAudioCompleted(false);
+            setShowQuestions(false);
             const timer = setTimeout(() => {
                 setAudioCompleted(true);
                 setIsPlaying(false);
@@ -41,7 +43,7 @@ const ListeningQuestionPage: React.FC<ListeningQuestionPageProps> = ({
 
             return () => clearTimeout(timer);
         }
-    }, [trackConfig.audioSrc, trackConfig.audioLength]);
+    }, [trackConfig]);
 
     useEffect(() => {
         setCurrentQuestionIndex(0);
