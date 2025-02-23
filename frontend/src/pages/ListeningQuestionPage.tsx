@@ -74,56 +74,56 @@ const ListeningQuestionPage: React.FC<ListeningQuestionPageProps> = ({
         }
     };
 
-    const handleTableAnswerChange = (rowIndex: number, colIndex: number, value: string | boolean) => {
-      console.log('Handling table answer change');
-      
+    const handleTableAnswerChange = (questionId: string, rowIndex: number, colIndex: number, value: string | boolean) => {
         setSelectedAnswers(prev => {
             const currentQuestion = trackConfig.questions[currentQuestionIndex];
             const currentQuestionId = currentQuestion.id;
-            const currentAnswers = (prev[currentQuestionId] || []) as (string | boolean)[][];
-            console.log('Current answers:', currentAnswers);
-            
-            // Ensure that currentAnswers is a 2D array
-            const updatedAnswers = currentAnswers.map(row => [...row]); // Deep copy to avoid direct mutation
 
-            // Ensure row exists
+            const currentAnswers = (prev[currentQuestionId] || []) as (string | boolean)[][];
+            const updatedAnswers = currentAnswers.map(row => [...row]);
+
             if (!updatedAnswers[rowIndex]) {
                 updatedAnswers[rowIndex] = [];
             }
 
-            // Set value at correct index
             updatedAnswers[rowIndex][colIndex] = value;
-            console.log('Updated answers:', updatedAnswers);
-            
+
             return {
                 ...prev,
                 [currentQuestionId]: updatedAnswers
-            }
+            };
         });
-    }
+    };
+
+    const handleMultipleChoiceAnswerChange = (questionId: string, answerId: string) => {
+        setSelectedAnswers(prev => ({
+            ...prev,
+            [questionId]: answerId
+        }));
+    };
 
     const renderQuestionComponent = (question: Question | TableCompletionQuestionType) => {
         switch (question.type) {
             case 'table-completion':
-              const tableQuestion = question as TableCompletionQuestionType;
-
-              return (
-                  <TableCompletionQuestion
-                      questionText={tableQuestion.text} // Now access properties on tableQuestion
-                      columnHeaders={tableQuestion.columnHeaders}
-                      rowHeaders={tableQuestion.rowHeaders}
-                      answers={[]}
-                      onAnswerChange={handleTableAnswerChange} // Access on tableQuestion
-                  />
-              );
+                const tableQuestion = question as TableCompletionQuestionType;
+                const questionId = tableQuestion.id;
+                return (
+                    <TableCompletionQuestion
+                        questionText={tableQuestion.text}
+                        columnHeaders={tableQuestion.columnHeaders}
+                        rowHeaders={tableQuestion.rowHeaders}
+                        answers={(selectedAnswers[questionId] || [[]]) as boolean[][]}
+                        onAnswerChange={(rowIndex, colIndex, value) => handleTableAnswerChange(questionId, rowIndex, colIndex, value)}
+                    />
+                );
             case 'single-choice':
             case 'multiple-choice-multiple-answer':
                 return (
                     <MultipleChoiceQuestion
                         questionText={question.text}
                         options={question.options}
-                        selectedAnswer={null}
-                        onAnswerChange={() => {}}
+                        selectedAnswer={selectedAnswers[question.id] || null}
+                        onAnswerChange={(answerId) => handleMultipleChoiceAnswerChange(question.id, answerId)}
                     />
                 );
             default:
