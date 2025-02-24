@@ -9,7 +9,7 @@ const TASK_CONFIGS: TaskConfig[] = [
     id: 'task1',
     type: 'independent',
     title: 'Task 1: Independent Speaking - Personal Experience/Opinion',
-    prepTime: 15,
+    prepTime: 5,
     responseTime: 45,
     prompt: 'Describe a time when you faced a difficult challenge. What did you do to overcome it, and what did you learn from the experience?'
   },
@@ -17,7 +17,7 @@ const TASK_CONFIGS: TaskConfig[] = [
     id: 'task2',
     type: 'integrated',
     title: 'Task 2: Integrated Speaking - Reading & Listening & Speaking (Campus Situation)',
-    prepTime: 30,
+    prepTime: 5,
     responseTime: 60,
     readingPassage: 'Reading passage about a proposed change to university library hours...',
     audioUrl: '/audio/task2.mp3',
@@ -28,7 +28,7 @@ const TASK_CONFIGS: TaskConfig[] = [
     id: 'task3',
     type: 'integrated',
     title: 'Task 3: Integrated Speaking - Academic Lecture',
-    prepTime: 30,
+    prepTime: 5,
     responseTime: 60,
     readingPassage: 'Reading passage about the concept of cognitive dissonance...',
     audioUrl: '/audio/task3.mp3',
@@ -39,7 +39,7 @@ const TASK_CONFIGS: TaskConfig[] = [
     id: 'task4',
     type: 'integrated',
     title: 'Task 4: Integrated Speaking - Academic Lecture (Concept/Process)',
-    prepTime: 20,
+    prepTime: 5,
     responseTime: 60,
     audioUrl: '/audio/task4.mp3',
     prompt: 'Describe the process of photosynthesis, using examples from the lecture.'
@@ -51,6 +51,7 @@ const SpeakingSectionPage: React.FC = () => {
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
   const [sectionComplete, setSectionComplete] = useState(false);
   const [sectionTimeRemaining, setSectionTimeRemaining] = useState(1200); // 20 minutes
+  const [isPrepTime, setIsPrepTime] = useState(true);
 
   const currentTask = TASK_CONFIGS[currentTaskIndex];
 
@@ -81,15 +82,24 @@ const SpeakingSectionPage: React.FC = () => {
   const handleTaskComplete = () => {
     if (currentTaskIndex < TASK_CONFIGS.length - 1) {
       setCurrentTaskIndex(prev => prev + 1);
+      setIsPrepTime(true);
     } else {
       setSectionComplete(true);
     }
   };
 
+  const handlePrepTimeEnd = () => {
+    setIsPrepTime(false);
+  };
+
+  const handleResponseTimeEnd = () => {
+    handleTaskComplete();
+  };
+
   if (sectionComplete) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-100">
-        <TopMenu 
+        <TopMenu
           sectionTitle="Speaking Section"
           questionProgress="Complete"
           timer={formatTime(sectionTimeRemaining)}
@@ -110,12 +120,20 @@ const SpeakingSectionPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* The SpeakingTaskPage component will handle its own TopMenu */}
+      <TopMenu
+        sectionTitle="Speaking Section"
+        questionProgress={getTaskProgress()}
+        timer={formatTime(sectionTimeRemaining)}
+      />
       <SpeakingTaskPage
         taskType={currentTask.type}
         taskConfig={currentTask}
-        sectionProgress={getTaskProgress()}
-        sectionTimer={formatTime(sectionTimeRemaining)}
+        prepTime={currentTask.prepTime}
+        responseTime={currentTask.responseTime}
+        onPrepTimeEnd={handlePrepTimeEnd}
+        onResponseTimeEnd={handleResponseTimeEnd}
+        isPrepTime={isPrepTime}
+        title={currentTask.title}
         onTaskComplete={handleTaskComplete}
       />
     </div>
