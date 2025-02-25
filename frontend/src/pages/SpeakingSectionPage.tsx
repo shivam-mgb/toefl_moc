@@ -20,9 +20,9 @@ const TASK_CONFIGS: TaskConfig[] = [
     prepTime: 5,
     responseTime: 60,
     readingPassage: 'Reading passage about a proposed change to university library hours...',
-    audioUrl: '/audio/task2.mp3',
+    audioUrl: '/src/assets/listening.mp3',
     prompt: 'The university is planning to change the library hours. Explain the proposal and give your opinion.',
-    readingTime: 45
+    readingTime: 5
   },
   {
     id: 'task3',
@@ -31,9 +31,9 @@ const TASK_CONFIGS: TaskConfig[] = [
     prepTime: 5,
     responseTime: 60,
     readingPassage: 'Reading passage about the concept of cognitive dissonance...',
-    audioUrl: '/audio/task3.mp3',
+    audioUrl: '/src/assets/listening.mp3',
     prompt: 'Explain the concept of cognitive dissonance and provide an example from the lecture.',
-    readingTime: 45
+    readingTime: 5
   },
   {
     id: 'task4',
@@ -41,7 +41,7 @@ const TASK_CONFIGS: TaskConfig[] = [
     title: 'Task 4: Integrated Speaking - Academic Lecture (Concept/Process)',
     prepTime: 5,
     responseTime: 60,
-    audioUrl: '/audio/task4.mp3',
+    audioUrl: '/src/assets/listening.mp3',
     prompt: 'Describe the process of photosynthesis, using examples from the lecture.'
   }
 ];
@@ -93,7 +93,7 @@ const SpeakingSectionPage: React.FC = () => {
   };
 
   const handleResponseTimeEnd = () => {
-    handleTaskComplete();
+    console.log("Do nothing on repsonse timeout for now");
   };
 
   if (sectionComplete) {
@@ -118,7 +118,7 @@ const SpeakingSectionPage: React.FC = () => {
     );
   }
 
-  return (
+  return currentTask ? (
     <div className="min-h-screen flex flex-col">
       <TopMenu
         sectionTitle="Speaking Section"
@@ -132,12 +132,13 @@ const SpeakingSectionPage: React.FC = () => {
         responseTime={currentTask.responseTime}
         onPrepTimeEnd={handlePrepTimeEnd}
         onResponseTimeEnd={handleResponseTimeEnd}
-        isPrepTime={isPrepTime}
+        isInitialPromptPhase={isPrepTime}
         title={currentTask.title}
         onTaskComplete={handleTaskComplete}
+        // onRecordingPhaseEnd={handleTaskComplete}
       />
     </div>
-  );
+  ) : null;
 };
 
 export default SpeakingSectionPage;
