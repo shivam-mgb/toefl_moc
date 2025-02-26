@@ -7,15 +7,16 @@ import { TaskConfig } from '../types/speaking';
 const TASK_CONFIGS: TaskConfig[] = [
   {
     id: 'task1',
-    type: 'independent',
+    type: 1,
     title: 'Task 1: Independent Speaking - Personal Experience/Opinion',
     prepTime: 5,
     responseTime: 45,
+    audioUrl: '/src/assets/listening.mp3',
     prompt: 'Describe a time when you faced a difficult challenge. What did you do to overcome it, and what did you learn from the experience?'
   },
   {
     id: 'task2',
-    type: 'integrated',
+    type: 2,
     title: 'Task 2: Integrated Speaking - Reading & Listening & Speaking (Campus Situation)',
     prepTime: 5,
     responseTime: 60,
@@ -26,7 +27,7 @@ const TASK_CONFIGS: TaskConfig[] = [
   },
   {
     id: 'task3',
-    type: 'integrated',
+    type: 3,
     title: 'Task 3: Integrated Speaking - Academic Lecture',
     prepTime: 5,
     responseTime: 60,
@@ -37,7 +38,7 @@ const TASK_CONFIGS: TaskConfig[] = [
   },
   {
     id: 'task4',
-    type: 'integrated',
+    type: 4,
     title: 'Task 4: Integrated Speaking - Academic Lecture (Concept/Process)',
     prepTime: 5,
     responseTime: 60,

@@ -7,7 +7,7 @@ import AudioPlayerComponent from '../components/AudioPlayerComponent';
 import MediaRecorderComponent from '../components/MediaRecorderComponent';
 
 interface SpeakingTaskPageProps {
-    taskType: 'independent' | 'integrated';
+    taskType: 1 | 2 | 3 | 4;
     taskConfig: TaskConfig;
     prepTime: number;
     responseTime: number;
@@ -30,6 +30,7 @@ const SpeakingTaskPage: React.FC<SpeakingTaskPageProps> = ({
     onTaskComplete
 }) => {
     const [isReadingPhase, setIsReadingPhase] = useState(false);
+    const [isAudioPhase, setIsAudioPhase] = useState(false);
     const [isPromptReadingPhase, setIsPromptReadingPhase] = useState(false);
     const [isPreparationPhase, setIsPreparationPhase] = useState(false);
     const [isRecordingPhase, setIsRecordingPhase] = useState(false);
@@ -62,7 +63,13 @@ const SpeakingTaskPage: React.FC<SpeakingTaskPageProps> = ({
         if (isInitialPromptPhase) {
             const timer = setTimeout(() => {
                 onPrepTimeEnd();
-                setIsPromptReadingPhase(true);
+                if (taskConfig.readingPassage) {
+                    setIsReadingPhase(true);
+                } else {
+                    setIsAudioPhase(true);
+                    console.log('just set the audio phase', isAudioPhase, 'and let me see the audiourl: ', taskConfig.audioUrl);
+                    
+                }
             }, 5000); // 5 seconds for initial prompt
 
             return () => clearTimeout(timer);
@@ -73,23 +80,19 @@ const SpeakingTaskPage: React.FC<SpeakingTaskPageProps> = ({
       if (isPromptReadingPhase) {
           const timer = setTimeout(() => {
               setIsPromptReadingPhase(false);
-              if (taskConfig.readingPassage) {
-                  setIsReadingPhase(true);
-              } else {
-                  setIsPreparationPhase(true);
-              }
+              setIsPreparationPhase(true);
           }, 5000); // 5 seconds for initial prompt
 
           return () => clearTimeout(timer);
       }
-  }, [isInitialPromptPhase, taskConfig.readingPassage]);
+  }, [isPromptReadingPhase]);
 
 
     useEffect(() => {
         if (isReadingPhase && readingTimeRemaining > 0) {
             const timer = setTimeout(() => {
                 setIsReadingPhase(false);
-                setIsPreparationPhase(true);
+                setIsAudioPhase(true);
             }, readingTimeRemaining * 1000);
 
             return () => clearTimeout(timer);
@@ -115,6 +118,12 @@ const SpeakingTaskPage: React.FC<SpeakingTaskPageProps> = ({
         }
     };
 
+    const handleAudioEnd = () => {
+        setIsAudioPhase(false);
+        setIsPreparationPhase(true);
+    };
+
+
     return (
         <div className="min-h-screen flex flex-col bg-gray-100">
             <main className="flex-grow container mx-auto px-4 py-8">
@@ -124,10 +133,7 @@ const SpeakingTaskPage: React.FC<SpeakingTaskPageProps> = ({
                     </h1>
                     {isInitialPromptPhase ? (
                         <>
-                            <TaskPromptArea promptText={taskConfig.prompt} />
-                            <div className="text-gray-600 text-center">
-                                Initial Prompt - Please wait...
-                            </div>
+                            <TaskPromptArea promptText={'Here the task intro should be. Maybe the constant message on the task number? Yeah prob.'} />
                         </>
                     ) : isReadingPhase && taskConfig.readingPassage ? (
                         <>
@@ -138,6 +144,16 @@ const SpeakingTaskPage: React.FC<SpeakingTaskPageProps> = ({
                                 Time remaining: {readingTimeRemaining} seconds
                             </p>
                             <button onClick={handleNext}>Next</button>
+                        </>
+                    ) : isAudioPhase && taskConfig.audioUrl ? (
+                        <>
+                            <AudioPlayerComponent 
+                                audioSrc={taskConfig.audioUrl}
+                                isPlaying={true}
+                                onPlay={handlePlay}
+                                onPause={handlePause}
+                                onEnded={handleAudioEnd}
+                            />
                         </>
                     ) : isPromptReadingPhase ? (
                        <>
@@ -163,6 +179,7 @@ const SpeakingTaskPage: React.FC<SpeakingTaskPageProps> = ({
                                     isPlaying={isPlaying}
                                     onPlay={handlePlay}
                                     onPause={handlePause}
+                                    onEnded={() => (console.log('just logging'))}
                                 />
                             )}
                             <Navigation

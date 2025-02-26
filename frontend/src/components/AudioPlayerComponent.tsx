@@ -5,17 +5,19 @@ interface AudioPlayerProps {
   onPlay: () => void;
   onPause: () => void;
   isPlaying: boolean;
+  onEnded: () => void; // Added onEnded callback
 }
 
 const AudioPlayerComponent: React.FC<AudioPlayerProps> = ({
   audioSrc,
   onPlay,
   onPause,
-  isPlaying
+  isPlaying,
+  onEnded, // Using onEnded callback
 }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [progress, setProgress] = useState(0);
-    const [duration, setDuration] = useState(0);
+  const [duration, setDuration] = useState(0);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -23,19 +25,26 @@ const AudioPlayerComponent: React.FC<AudioPlayerProps> = ({
     const handleTimeUpdate = () => {
       if (audio) {
         setProgress(audio.currentTime);
-                setDuration(audio.duration);
+        setDuration(audio.duration);
       }
     };
 
-        const handleLoadedMetadata = () => {
-            if (audio) {
-                setDuration(audio.duration);
-            }
-        };
+    const handleLoadedMetadata = () => {
+      if (audio) {
+        setDuration(audio.duration);
+      }
+    };
+
+    const handleEnded = () => {
+      if (onEnded) {
+        onEnded(); // Call the onEnded callback
+      }
+    };
 
     if (audio) {
       audio.addEventListener('timeupdate', handleTimeUpdate);
-            audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.addEventListener('ended', handleEnded); // Add ended event listener
 
       if (isPlaying) {
         audio.play().catch(err => console.error("Error playing audio:", err));
@@ -47,18 +56,19 @@ const AudioPlayerComponent: React.FC<AudioPlayerProps> = ({
     return () => {
       if (audio) {
         audio.removeEventListener('timeupdate', handleTimeUpdate);
-                audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        audio.removeEventListener('ended', handleEnded); // Remove ended listener
       }
     };
-  }, [isPlaying, audioSrc]);
+  }, [isPlaying, audioSrc, onEnded]); // onEnded added to dependencies
 
-    const formatTime = (seconds: number): string => {
-        const minutes = Math.floor(seconds / 60);
-        const remainingSeconds = Math.floor(seconds % 60);
-        const formattedMinutes = String(minutes).padStart(2, '0');
-        const formattedSeconds = String(remainingSeconds).padStart(2, '0');
-        return `${formattedMinutes}:${formattedSeconds}`;
-    };
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    const formattedMinutes = String(minutes).padStart(2, '0');
+    const formattedSeconds = String(remainingSeconds).padStart(2, '0');
+    return `${formattedMinutes}:${formattedSeconds}`;
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
