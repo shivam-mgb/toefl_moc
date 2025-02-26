@@ -12,7 +12,8 @@ const TASK_CONFIGS: TaskConfig[] = [
     prepTime: 5,
     responseTime: 45,
     audioUrl: '/src/assets/listening.mp3',
-    prompt: 'Describe a time when you faced a difficult challenge. What did you do to overcome it, and what did you learn from the experience?'
+    prompt: 'Describe a time when you faced a difficult challenge. What did you do to overcome it, and what did you learn from the experience?',
+    promptAudio: '/src/assets/prompt_audio.mp3'
   },
   {
     id: 'task2',
@@ -23,6 +24,7 @@ const TASK_CONFIGS: TaskConfig[] = [
     readingPassage: 'Reading passage about a proposed change to university library hours...',
     audioUrl: '/src/assets/listening.mp3',
     prompt: 'The university is planning to change the library hours. Explain the proposal and give your opinion.',
+    promptAudio: '/src/assets/prompt_audio.mp3',
     readingTime: 5
   },
   {
@@ -34,6 +36,7 @@ const TASK_CONFIGS: TaskConfig[] = [
     readingPassage: 'Reading passage about the concept of cognitive dissonance...',
     audioUrl: '/src/assets/listening.mp3',
     prompt: 'Explain the concept of cognitive dissonance and provide an example from the lecture.',
+    promptAudio: '/src/assets/prompt_audio.mp3',
     readingTime: 5
   },
   {
@@ -43,7 +46,8 @@ const TASK_CONFIGS: TaskConfig[] = [
     prepTime: 5,
     responseTime: 60,
     audioUrl: '/src/assets/listening.mp3',
-    prompt: 'Describe the process of photosynthesis, using examples from the lecture.'
+    prompt: 'Describe the process of photosynthesis, using examples from the lecture.',
+    promptAudio: '/src/assets/prompt_audio.mp3'
   }
 ];
 

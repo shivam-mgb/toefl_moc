@@ -77,18 +77,6 @@ const SpeakingTaskPage: React.FC<SpeakingTaskPageProps> = ({
     }, [isInitialPromptPhase, taskConfig.readingPassage]);
 
     useEffect(() => {
-      if (isPromptReadingPhase) {
-          const timer = setTimeout(() => {
-              setIsPromptReadingPhase(false);
-              setIsPreparationPhase(true);
-          }, 5000); // 5 seconds for initial prompt
-
-          return () => clearTimeout(timer);
-      }
-  }, [isPromptReadingPhase]);
-
-
-    useEffect(() => {
         if (isReadingPhase && readingTimeRemaining > 0) {
             const timer = setTimeout(() => {
                 setIsReadingPhase(false);
@@ -120,6 +108,11 @@ const SpeakingTaskPage: React.FC<SpeakingTaskPageProps> = ({
 
     const handleAudioEnd = () => {
         setIsAudioPhase(false);
+        setIsPromptReadingPhase(true);
+    };
+
+    const handlePromptAudioEnd = () => {
+        setIsPromptReadingPhase(false);
         setIsPreparationPhase(true);
     };
 
@@ -158,6 +151,13 @@ const SpeakingTaskPage: React.FC<SpeakingTaskPageProps> = ({
                     ) : isPromptReadingPhase ? (
                        <>
                             <TaskPromptArea promptText={taskConfig.prompt} />
+                            <AudioPlayerComponent 
+                                audioSrc={taskConfig.promptAudio}
+                                isPlaying={true}
+                                onPlay={handlePlay}
+                                onPause={handlePause}
+                                onEnded={handlePromptAudioEnd}
+                            />
                        </>
 
                     ) : isPreparationPhase ? (

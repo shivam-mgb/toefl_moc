@@ -5,6 +5,7 @@ export interface TaskConfig {
   prepTime: number;  // in seconds
     responseTime: number;
     prompt: string;
+    promptAudio: string;
     readingPassage?: string;
     audioUrl?: string;
     readingTime?: number;
