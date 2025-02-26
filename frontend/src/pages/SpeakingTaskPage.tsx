@@ -65,6 +65,9 @@ const SpeakingTaskPage: React.FC<SpeakingTaskPageProps> = ({
                 onPrepTimeEnd();
                 if (taskConfig.readingPassage) {
                     setIsReadingPhase(true);
+                }
+                else if (typeof taskConfig.audioUrl === 'undefined') {
+                    setIsPromptReadingPhase(true);
                 } else {
                     setIsAudioPhase(true);
                     console.log('just set the audio phase', isAudioPhase, 'and let me see the audiourl: ', taskConfig.audioUrl);

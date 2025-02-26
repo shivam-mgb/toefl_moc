@@ -11,7 +11,6 @@ const TASK_CONFIGS: TaskConfig[] = [
     title: 'Task 1: Independent Speaking - Personal Experience/Opinion',
     prepTime: 5,
     responseTime: 45,
-    audioUrl: '/src/assets/listening.mp3',
     prompt: 'Describe a time when you faced a difficult challenge. What did you do to overcome it, and what did you learn from the experience?',
     promptAudio: '/src/assets/prompt_audio.mp3'
   },
