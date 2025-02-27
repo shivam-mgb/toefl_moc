@@ -79,9 +79,6 @@ const WritingSectionIntroPage: React.FC = () => {
             <button onClick={handleStartTest} className="w-full bg-teal-500 text-white py-4 px-6 rounded-md font-semibold text-lg shadow-md hover:bg-teal-600 transition-colors duration-200 focus:outline-none focus:ring-teal-500 focus:ring-opacity-50">
               Start Full Writing Section Test
             </button>
-            <button onClick={handlePracticeByTask} className="w-full bg-teal-500 text-white py-4 px-6 rounded-md mt-4 font-semibold text-lg shadow-md hover:bg-teal-600 transition-colors duration-200 focus:outline-none focus:ring-teal-500 focus:ring-opacity-50">
-              Practice by Task
-            </button>
           </div>
         </div>
       </main>

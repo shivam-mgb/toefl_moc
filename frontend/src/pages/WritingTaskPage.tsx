@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import TopMenu from '../components/TopMenu';
 import Navigation from '../components/Navigation';
 import WritingReadingPhase from '../components/WritingReadingPhase';
@@ -41,6 +41,10 @@ const PLACEHOLDER_PASSAGE = {
   `
 };
 
+// Placeholder audio URL - Replace with your actual audio URL
+const PLACEHOLDER_AUDIO_URL = "/src/assets/prompt_audio.mp3";
+
+
 interface WritingTaskPageProps {
   taskType: 'integrated' | 'independent';
   taskConfig: TaskConfig;
@@ -59,96 +63,93 @@ const WritingTaskPage: React.FC<WritingTaskPageProps> = ({
   // Phase states
   const [currentPhase, setCurrentPhase] = useState<'reading' | 'listening' | 'writing'>('reading');
   const [timeRemaining, setTimeRemaining] = useState(180); // 3 minutes for reading
-  
-  // Content states
-  const [essayText, setEssayText] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const handlePhaseComplete = React.useCallback(() => {
-    if (currentPhase === 'reading') {
-      setCurrentPhase('listening');
-      setTimeRemaining(120); // 2 minutes for listening
-    } else if (currentPhase === 'listening') {
-      setCurrentPhase('writing');
-      setTimeRemaining(1200); // 20 minutes for writing
-      setIsPlaying(false);
-    }
-  }, [currentPhase, setCurrentPhase, setTimeRemaining, setIsPlaying]);
+  // Content states
+  const [essayText, setEssayText] = useState('');
 
   useEffect(() => {
-    if (timeRemaining > 0) {
+    // Automatically start listening phase after reading
+    if (currentPhase === 'reading' && timeRemaining <= 0) {
+      setCurrentPhase('listening');
+      setTimeRemaining(5); // Use config for listening time
+      setIsPlaying(true); // Start playing audio automatically.
+    }
+
+    //Automatically go to writing phase after listening
+    if (currentPhase === 'listening' && timeRemaining <= 0) {
+        setCurrentPhase('writing');
+        setTimeRemaining(1200); // Use config for writing time
+        setIsPlaying(false);
+    }
+
+
+    // Timer for each phase
+    if (timeRemaining > 0 && (
+      currentPhase === 'reading' || 
+      currentPhase === 'listening' || 
+      currentPhase === 'writing')
+    ) {
       const timer = setTimeout(() => {
         setTimeRemaining(prev => prev - 1);
       }, 1000);
-
       return () => clearTimeout(timer);
-    } else {
-      handlePhaseComplete();
     }
-  }, [timeRemaining, handlePhaseComplete]);
 
-  const handleSkip = () => {
-    if (window.confirm('Are you sure you want to skip the reading phase? You won\'t be able to return to this passage.')) {
-      handlePhaseComplete();
-    }
-  };
+  }, [currentPhase, timeRemaining, taskConfig]);
+
 
   const handlePlay = () => {
     setIsPlaying(true);
-    // Simulate lecture completion after 2 minutes
-    setTimeout(() => {
-      setIsPlaying(false);
-    }, 120000);
   };
 
   const handlePause = () => {
     setIsPlaying(false);
   };
 
-  // Format time for display
-  const formatTime = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
 
   const handleSubmit = () => {
     if (window.confirm('Are you sure you want to submit your response?')) {
+      onTaskComplete(); // Call onTaskComplete after submission
       console.log('Essay submitted:', essayText);
+    }
+  };
+
+  const handleSkip = () => {
+    if (currentPhase === 'reading') {
+      setCurrentPhase('listening');
+      setTimeRemaining(5); // Adjust listening time as needed
+      setIsPlaying(true);
+    } else if (currentPhase === 'listening') {
+      setCurrentPhase('writing');
+      setTimeRemaining(5); // Adjust writing time as needed
+      setIsPlaying(false);
     }
   };
 
   const handleNext = () => {
     if (currentPhase === 'reading') {
-      if (window.confirm('Are you sure you want to proceed? You won\'t be able to return to this passage.')) {
-        handlePhaseComplete();
-      }
+        handleSkip(); //Skip reading phase
     } else if (currentPhase === 'listening') {
-      if (window.confirm('Are you sure you want to proceed to the writing phase?')) {
-        handlePhaseComplete();
-      }
-    } else {
+        handleSkip(); //Skip listening phase
+    } else if (currentPhase === 'writing') {
       handleSubmit();
     }
   };
 
-  const getNextButtonText = () => {
-    switch (currentPhase) {
-      case 'reading':
-        return 'Next: Listening';
-      case 'listening':
-        return 'Next: Writing';
-      case 'writing':
-        return 'Submit';
-      default:
-        return 'Next';
-    }
+  const handleWritingTimeout = () => {
+    //Do things that need to be done at the end of writing phase
+    console.log('Writing phase timed out!');
+    console.log('Essay submitted:', essayText);
+    onTaskComplete();
+    setTimeRemaining(5);
   };
 
-  // Modify the phase management for independent task
-  // const phases = taskType === 'integrated' 
-  //   ? ['reading', 'listening', 'writing'] 
-  //   : ['writing'];
+
+  const getNextButtonText = () => {
+      if (currentPhase === 'writing') return 'Submit';
+      return 'Next';
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
@@ -161,19 +162,20 @@ const WritingTaskPage: React.FC<WritingTaskPageProps> = ({
       <main className="flex-grow container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
           {taskType === 'integrated' ? (
-            // Existing integrated task UI
             currentPhase === 'reading' ? (
               <WritingReadingPhase
                 passageTitle={PLACEHOLDER_PASSAGE.title}
                 passageText={PLACEHOLDER_PASSAGE.text}
-                onSkip={handleSkip}
+                timeRemaining={timeRemaining}
               />
             ) : currentPhase === 'listening' ? (
               <ListeningArea
-                timeRemaining={formatTime(timeRemaining)}
+                audioUrl={PLACEHOLDER_AUDIO_URL}
+                timeRemaining={timeRemaining}
                 isPlaying={isPlaying}
                 onPlay={handlePlay}
                 onPause={handlePause}
+                onAudioEnd={handleNext}
               />
             ) : (
               <WritingPhaseArea
@@ -181,7 +183,8 @@ const WritingTaskPage: React.FC<WritingTaskPageProps> = ({
                 passageText={PLACEHOLDER_PASSAGE.text}
                 essayText={essayText}
                 onEssayChange={setEssayText}
-                timeRemaining={formatTime(timeRemaining)}
+                timeRemaining={timeRemaining}
+                onTimeout={handleWritingTimeout}
               />
             )
           ) : (
@@ -191,7 +194,8 @@ const WritingTaskPage: React.FC<WritingTaskPageProps> = ({
               passageText={taskConfig.prompt}
               essayText={essayText}
               onEssayChange={setEssayText}
-              timeRemaining={formatTime(timeRemaining)}
+              timeRemaining={timeRemaining}
+              onTimeout={handleWritingTimeout}
             />
           )}
         </div>

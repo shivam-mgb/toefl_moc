@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface StaticImageAreaProps {
-  imageUrl: string;
+  imageUrl?: string;
 }
 
 const StaticImageArea: React.FC<StaticImageAreaProps> = ({ imageUrl }) => {
@@ -9,7 +9,7 @@ const StaticImageArea: React.FC<StaticImageAreaProps> = ({ imageUrl }) => {
     <div className="border-2 border-dashed border-gray-300 rounded-lg
                     bg-gray-50 p-8 flex items-center justify-center
                     aspect-video">
-      {imageUrl ? (
+      {imageUrl && imageUrl.length > 0  ? (
         <img src={imageUrl} alt="Placeholder" className="max-h-full max-w-full" />
       ) : (
         <div className="text-center">

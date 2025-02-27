@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ReadingPassageArea from './ReadingPassageArea';
 import TextEditorArea from './TextEditorArea';
 import TimerComponent from './TimerComponent';
@@ -8,7 +8,8 @@ interface WritingPhaseAreaProps {
   passageText: string;
   essayText: string;
   onEssayChange: (text: string) => void;
-  timeRemaining: string;
+  timeRemaining: number;
+  onTimeout: () => void; // Add onTimeout callback prop
 }
 
 const WritingPhaseArea: React.FC<WritingPhaseAreaProps> = ({
@@ -16,8 +17,17 @@ const WritingPhaseArea: React.FC<WritingPhaseAreaProps> = ({
   passageText,
   essayText,
   onEssayChange,
-  timeRemaining
+  timeRemaining,
+  onTimeout,
 }) => {
+
+  useEffect(() => {
+    if (timeRemaining <= 0) {
+      onTimeout(); // Call the callback when time runs out
+    }
+  }, [timeRemaining, onTimeout]);
+
+
   return (
     <div className="space-y-6 h-full">
       {/* Timer and Instructions */}

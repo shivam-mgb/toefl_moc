@@ -19,7 +19,7 @@ const TASK_CONFIGS: Record<WritingTaskType, TaskConfig> = {
   integrated: {
     type: 'integrated',
     title: 'Integrated Writing Task',
-    readingTime: 180,  // 3 minutes
+    readingTime: 5,  // 3 minutes
     listeningTime: 120, // 2 minutes
     writingTime: 1200, // 20 minutes
     prompt: 'Summarize the points made in the lecture, explaining how they cast doubt on points made in the reading passage.'
@@ -29,7 +29,7 @@ const TASK_CONFIGS: Record<WritingTaskType, TaskConfig> = {
     title: 'Independent Writing Task',
     readingTime: 0,
     listeningTime: 0,
-    writingTime: 1800, // 30 minutes
+    writingTime: 600, // 10 minutes
     prompt: 'Do you agree or disagree with the following statement? Technology has made it easier for people to maintain relationships with family and friends. Use specific reasons and examples to support your answer.'
   }
 };
@@ -38,7 +38,7 @@ const WritingSectionPage: React.FC = () => {
   // Section state
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
   const [sectionComplete, setSectionComplete] = useState(false);
-  const [sectionTimeRemaining, setSectionTimeRemaining] = useState(3600); // 60 minutes
+  const [sectionTimeRemaining, setSectionTimeRemaining] = useState(1300); // 30 minutes
 
   // Task sequence
   const taskSequence: WritingTaskType[] = ['integrated', 'independent'];
@@ -63,11 +63,13 @@ const WritingSectionPage: React.FC = () => {
   };
 
   const handleTaskComplete = () => {
+    console.log("Current Task Index BEFORE update:", currentTaskIndex);
     if (currentTaskIndex < taskSequence.length - 1) {
       setCurrentTaskIndex(prev => prev + 1);
     } else {
       setSectionComplete(true);
     }
+    console.log("Current Task Index AFTER update:", currentTaskIndex);
   };
 
   if (sectionComplete) {
