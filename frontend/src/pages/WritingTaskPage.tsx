@@ -4,7 +4,7 @@ import Navigation from '../components/Navigation';
 import WritingReadingPhase from '../components/WritingReadingPhase';
 import ListeningArea from '../components/ListeningArea';
 import WritingPhaseArea from '../components/WritingPhaseArea';
-import { TaskConfig } from '../types/writing';
+import { TaskConfig } from './../types/writing';
 
 // Placeholder content
 const PLACEHOLDER_PASSAGE = {
@@ -54,7 +54,7 @@ const WritingTaskPage: React.FC<WritingTaskPageProps> = ({
   taskConfig,
   sectionProgress,
   sectionTimer,
-  onTaskComplete
+  onTaskComplete,
 }) => {
   // Phase states
   const [currentPhase, setCurrentPhase] = useState<'reading' | 'listening' | 'writing'>('reading');
@@ -64,7 +64,17 @@ const WritingTaskPage: React.FC<WritingTaskPageProps> = ({
   const [essayText, setEssayText] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // Timer effect
+  const handlePhaseComplete = React.useCallback(() => {
+    if (currentPhase === 'reading') {
+      setCurrentPhase('listening');
+      setTimeRemaining(120); // 2 minutes for listening
+    } else if (currentPhase === 'listening') {
+      setCurrentPhase('writing');
+      setTimeRemaining(1200); // 20 minutes for writing
+      setIsPlaying(false);
+    }
+  }, [currentPhase, setCurrentPhase, setTimeRemaining, setIsPlaying]);
+
   useEffect(() => {
     if (timeRemaining > 0) {
       const timer = setTimeout(() => {
@@ -75,18 +85,7 @@ const WritingTaskPage: React.FC<WritingTaskPageProps> = ({
     } else {
       handlePhaseComplete();
     }
-  }, [timeRemaining]);
-
-  const handlePhaseComplete = () => {
-    if (currentPhase === 'reading') {
-      setCurrentPhase('listening');
-      setTimeRemaining(120); // 2 minutes for listening
-    } else if (currentPhase === 'listening') {
-      setCurrentPhase('writing');
-      setTimeRemaining(1200); // 20 minutes for writing
-      setIsPlaying(false);
-    }
-  };
+  }, [timeRemaining, handlePhaseComplete]);
 
   const handleSkip = () => {
     if (window.confirm('Are you sure you want to skip the reading phase? You won\'t be able to return to this passage.')) {
@@ -147,9 +146,9 @@ const WritingTaskPage: React.FC<WritingTaskPageProps> = ({
   };
 
   // Modify the phase management for independent task
-  const phases = taskType === 'integrated' 
-    ? ['reading', 'listening', 'writing'] 
-    : ['writing'];
+  // const phases = taskType === 'integrated' 
+  //   ? ['reading', 'listening', 'writing'] 
+  //   : ['writing'];
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
@@ -188,8 +187,8 @@ const WritingTaskPage: React.FC<WritingTaskPageProps> = ({
           ) : (
             // Independent task UI - just the writing phase
             <WritingPhaseArea
-              taskTitle={taskConfig.title}
-              prompt={taskConfig.prompt}
+              passageTitle={taskConfig.title}
+              passageText={taskConfig.prompt}
               essayText={essayText}
               onEssayChange={setEssayText}
               timeRemaining={formatTime(timeRemaining)}
@@ -201,15 +200,16 @@ const WritingTaskPage: React.FC<WritingTaskPageProps> = ({
       {/* Navigation */}
       <div className="border-t border-gray-200 bg-white">
         <div className="container mx-auto px-4">
-          <Navigation 
+          <Navigation
             onNext={handleNext}
-            nextText={getNextButtonText()}
             isNextDisabled={false}
-          />
+          >
+            {getNextButtonText()}
+          </Navigation>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
-export default WritingTaskPage; 
+export default WritingTaskPage;

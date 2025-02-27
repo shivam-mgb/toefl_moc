@@ -53,6 +53,10 @@ const SECTION_SCORES: SectionScore[] = [
 ];
 
 const ReviewPage: React.FC = () => {
+  // TODO: Get writing content from global state
+  const integratedWritingContent = 'TODO: Get integrated writing content from global state';
+  const independentWritingContent = 'TODO: Get independent writing content from global state';
+
   const totalScore = SECTION_SCORES.reduce((sum, section) => sum + section.score, 0);
   const maxTotalScore = SECTION_SCORES.reduce((sum, section) => sum + section.maxScore, 0);
 
@@ -92,7 +96,7 @@ const ReviewPage: React.FC = () => {
                 
                 {/* Section Score */}
                 <div className="text-2xl font-bold text-teal-600 mb-4">
-                  {section.score} <span className="text-gray-500">/ {section.maxScore}</span>
+                  {section.score} <span className="text-gray-500">/ {maxTotalScore}</span>
                 </div>
 
                 {/* Score Details */}
@@ -115,6 +119,21 @@ const ReviewPage: React.FC = () => {
             ))}
           </div>
 
+          {/* Writing Content */}
+          <div className="bg-white rounded-lg shadow-md p-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Writing Section Review</h2>
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">Integrated Writing</h3>
+                <p className="text-gray-700">{integratedWritingContent}</p>
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">Independent Writing</h3>
+                <p className="text-gray-700">{independentWritingContent}</p>
+              </div>
+            </div>
+          </div>
+
           {/* Navigation */}
           <div className="flex justify-center pt-8">
             <button
@@ -132,4 +151,4 @@ const ReviewPage: React.FC = () => {
   );
 };
 
-export default ReviewPage; 
+export default ReviewPage;

@@ -3,7 +3,7 @@ import React from 'react';
 interface TopMenuProps {
   sectionTitle: string;
   questionProgress?: string; // Optional - e.g., "1/10"
-  timer?: string; // Optional - e.g., "10:00"
+  timer?: string | null; // Optional - e.g., "10:00"
 }
 
 const TopMenu: React.FC<TopMenuProps> = ({ sectionTitle, questionProgress, timer }) => {
@@ -34,4 +34,4 @@ const TopMenu: React.FC<TopMenuProps> = ({ sectionTitle, questionProgress, timer
   );
 };
 
-export default TopMenu; 
+export default TopMenu;

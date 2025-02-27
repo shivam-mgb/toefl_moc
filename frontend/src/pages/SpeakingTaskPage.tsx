@@ -188,7 +188,9 @@ const SpeakingTaskPage: React.FC<SpeakingTaskPageProps> = ({
                             <Navigation
                                 onNext={onTaskComplete}
                                 isNextDisabled={!hasRecording}
-                            />
+                            >
+                                Next
+                            </Navigation>
                         </>
                     )}
                 </div>

@@ -3,9 +3,10 @@ import React from 'react';
 interface NavigationProps {
   onNext: () => void;
   isNextDisabled?: boolean;
+  children: React.ReactNode;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ onNext, isNextDisabled = false }) => {
+const Navigation: React.FC<NavigationProps> = ({ onNext, isNextDisabled = false, children }) => {
   return (
     <div className="flex justify-end py-4 px-6">
       <button
@@ -21,7 +22,7 @@ const Navigation: React.FC<NavigationProps> = ({ onNext, isNextDisabled = false 
           }
         `}
       >
-        Next
+        {children}
       </button>
     </div>
   );

@@ -2,6 +2,7 @@ import React from 'react';
 import TopMenu from '../components/TopMenu';
 import Navigation from '../components/Navigation';
 import SectionCard from '../components/SectionCard';
+import { useSearchParams } from 'react-router-dom';
 
 // Define section data for cleaner JSX
 const sections = [
@@ -45,10 +46,15 @@ const sections = [
 ];
 
 const SectionSelectionPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const section = searchParams.get('section');
+
   // Placeholder navigation handler
   const handleNext = () => {
     console.log('Next clicked');
   };
+
+  const filteredSections = section ? sections.filter(s => s.title.toLowerCase().includes(section)) : sections;
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
@@ -70,7 +76,7 @@ const SectionSelectionPage: React.FC = () => {
 
         {/* Section Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-7xl mx-auto">
-          {sections.map((section, index) => (
+          {filteredSections.map((section, index) => (
             <SectionCard
               key={index}
               sectionTitle={section.title}
@@ -94,10 +100,12 @@ const SectionSelectionPage: React.FC = () => {
 
       {/* Navigation - Hidden on this page but included for consistency */}
       <div className="hidden">
-        <Navigation onNext={handleNext} />
+        <Navigation onNext={handleNext}>
+          Next
+        </Navigation>
       </div>
-    </div>
+    </div >
   );
 };
 
-export default SectionSelectionPage; 
+export default SectionSelectionPage;
