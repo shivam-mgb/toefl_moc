@@ -2,7 +2,7 @@ import React from 'react';
 
 interface TaskOption {
   label: string;
-  onClick: () => void;
+  onClick?: () => void;
 }
 
 interface SectionCardProps {
@@ -11,6 +11,7 @@ interface SectionCardProps {
   fullTestButtonLabel: string;
   onFullTestClick: () => void;
   taskOptions: TaskOption[];
+  onTaskClick: (taskLabel: string) => void;
 }
 
 const SectionCard: React.FC<SectionCardProps> = ({
@@ -18,7 +19,8 @@ const SectionCard: React.FC<SectionCardProps> = ({
   sectionDescription,
   fullTestButtonLabel,
   onFullTestClick,
-  taskOptions
+  taskOptions,
+  onTaskClick
 }) => {
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -48,7 +50,7 @@ const SectionCard: React.FC<SectionCardProps> = ({
         {taskOptions.map((option, index) => (
           <button
             key={index}
-            onClick={option.onClick}
+            onClick={() => onTaskClick(option.label)}
             className="w-full text-left px-4 py-2 text-gray-700 
                      hover:bg-gray-100 rounded-md transition-colors duration-200
                      focus:outline-none focus:ring-1 focus:ring-teal-500"
@@ -61,4 +63,4 @@ const SectionCard: React.FC<SectionCardProps> = ({
   );
 };
 
-export default SectionCard; 
+export default SectionCard;

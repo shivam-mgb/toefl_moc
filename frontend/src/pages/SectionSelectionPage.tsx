@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import TopMenu from '../components/TopMenu';
 import Navigation from '../components/Navigation';
 import SectionCard from '../components/SectionCard';
@@ -10,8 +11,8 @@ const sections = [
     title: "Reading Section",
     description: "Assesses reading comprehension of academic texts.",
     fullTestLabel: "Take Full Reading Section Test",
-    taskOptions: [
-      { label: "Single Passage (Task)", onClick: () => console.log("Single Passage clicked") }
+      taskOptions: [
+      { label: "Single Passage (Task)" }
     ]
   },
   {
@@ -19,8 +20,8 @@ const sections = [
     description: "Assesses understanding of spoken English in academic settings.",
     fullTestLabel: "Take Full Listening Section Test",
     taskOptions: [
-      { label: "Conversation Task", onClick: () => console.log("Conversation Task clicked") },
-      { label: "Lecture Task", onClick: () => console.log("Lecture Task clicked") }
+      { label: "Conversation Task" },
+      { label: "Lecture Task" }
     ]
   },
   {
@@ -28,10 +29,10 @@ const sections = [
     description: "Assesses spoken English proficiency in academic and general contexts.",
     fullTestLabel: "Take Full Speaking Section Test",
     taskOptions: [
-      { label: "Speaking Task 1", onClick: () => console.log("Speaking Task 1 clicked") },
-      { label: "Speaking Task 2", onClick: () => console.log("Speaking Task 2 clicked") },
-      { label: "Speaking Task 3", onClick: () => console.log("Speaking Task 3 clicked") },
-      { label: "Speaking Task 4", onClick: () => console.log("Speaking Task 4 clicked") }
+      { label: "Speaking Task 1" },
+      { label: "Speaking Task 2" },
+      { label: "Speaking Task 3" },
+      { label: "Speaking Task 4" }
     ]
   },
   {
@@ -39,13 +40,14 @@ const sections = [
     description: "Assesses written English proficiency in academic settings.",
     fullTestLabel: "Take Full Writing Section Test",
     taskOptions: [
-      { label: "Integrated Writing Task", onClick: () => console.log("Integrated Writing clicked") },
-      { label: "Independent Writing Task", onClick: () => console.log("Independent Writing clicked") }
+      { label: "Integrated Writing Task" },
+      { label: "Independent Writing Task" }
     ]
   }
 ];
 
 const SectionSelectionPage: React.FC = () => {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const section = searchParams.get('section');
 
@@ -82,8 +84,32 @@ const SectionSelectionPage: React.FC = () => {
               sectionTitle={section.title}
               sectionDescription={section.description}
               fullTestButtonLabel={section.fullTestLabel}
-              onFullTestClick={() => console.log(`${section.title} full test clicked`)}
+              onFullTestClick={() => {
+                switch (section.title) {
+                  case "Reading Section":
+                    navigate("/reading-section-intro");
+                    break;
+                  case "Listening Section":
+                    navigate("/listening-section-intro");
+                    break;
+                  case "Speaking Section":
+                    navigate("/speaking-section-intro");
+                    break;
+                  case "Writing Section":
+                    navigate("/writing-section-intro");
+                    break;
+                  default:
+                    console.log("Unknown section:", section.title);
+                }
+              }}
               taskOptions={section.taskOptions}
+              onTaskClick={(taskLabel) => {
+                if (section.title === "Reading Section" && taskLabel === "Single Passage (Task)") {
+                  navigate("/reading-single-passage-task-list");
+                } else {
+                  console.log(`Task ${taskLabel} clicked in ${section.title}`);
+                }
+              }}
             />
           ))}
         </div>
