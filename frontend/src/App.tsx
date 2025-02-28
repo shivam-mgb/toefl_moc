@@ -7,12 +7,16 @@ import SpeakingSectionPage from './pages/SpeakingSectionPage';
 import WritingSectionIntroPage from './pages/WritingSectionIntroPage';
 import WritingSectionPage from './pages/WritingSectionPage';
 import ReviewPage from './pages/ReviewPage';
+import ReadingSectionPage from './pages/ReadingSectionPage';
+import ReadingSectionIntroPage from './pages/ReadingSectionIntroPage'; 
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/writing-section-intro" replace />} />
+        <Route path="/" element={<Navigate to="/reading-section-intro" replace />} />
+        <Route path="/reading-section-intro" element={<ReadingSectionIntroPage />} />
+        <Route path="/reading-section" element={<ReadingSectionPage />} />
         <Route path="/listening-section-intro" element={<ListeningSectionIntroPage />} />
         <Route path="/listening-section" element={<ListeningSectionPage />} />
         <Route path="/speaking-section-intro" element={<SpeakingSectionIntroPage />} />

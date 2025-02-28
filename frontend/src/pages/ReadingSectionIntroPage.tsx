@@ -1,15 +1,14 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom'
 import TopMenu from '../components/TopMenu';
-import Navigation from '../components/Navigation';
+
 
 const ReadingSectionIntroPage: React.FC = () => {
+  const navigate = useNavigate();
+
   // Placeholder handlers
   const handleStartTest = () => {
-    console.log('Start Reading Section Test clicked');
-  };
-
-  const handleNext = () => {
-    console.log('Next clicked');
+    navigate('/reading-section');
   };
 
   return (
@@ -113,11 +112,6 @@ const ReadingSectionIntroPage: React.FC = () => {
           </p>
         </div>
       </footer>
-
-      {/* Navigation - Hidden on this page but included for consistency */}
-      <div className="hidden">
-        <Navigation onNext={handleNext} />
-      </div>
     </div>
   );
 };
