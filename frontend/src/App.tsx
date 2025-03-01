@@ -1,34 +1,36 @@
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import SectionSelectionPage from './pages/SectionSelectionPage';
+import ReadingSectionPage from './pages/ReadingSectionPage';
 import ListeningSectionPage from './pages/ListeningSectionPage';
-import ListeningSectionIntroPage from './pages/ListeningSectionIntroPage';
-import SpeakingSectionIntroPage from './pages/SpeakingSectionIntroPage';
 import SpeakingSectionPage from './pages/SpeakingSectionPage';
-import WritingSectionIntroPage from './pages/WritingSectionIntroPage';
 import WritingSectionPage from './pages/WritingSectionPage';
 import ReviewPage from './pages/ReviewPage';
-import ReadingSectionPage from './pages/ReadingSectionPage';
-import ReadingSectionIntroPage from './pages/ReadingSectionIntroPage'; 
-import SectionSelectionPage from './pages/SectionSelectionPage';
+import AdminRoutes from './routes/AdminRoutes';
 
-function App() {
+// CSS imports
+import './App.css';
+
+const App: React.FC = () => {
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
-        <Route path="/" element={<Navigate to="/section-selection" replace />} />
-        <Route path='/section-selection' element={<SectionSelectionPage />} />
-        <Route path="/reading-section-intro" element={<ReadingSectionIntroPage />} />
-        <Route path="/reading-section" element={<ReadingSectionPage />} />
-        <Route path="/listening-section-intro" element={<ListeningSectionIntroPage />} />
-        <Route path="/listening-section" element={<ListeningSectionPage />} />
-        <Route path="/speaking-section-intro" element={<SpeakingSectionIntroPage />} />
-        <Route path="/speaking-section" element={<SpeakingSectionPage />} />
-        <Route path="/writing-section-intro" element={<WritingSectionIntroPage />} />
-        <Route path="/writing-section" element={<WritingSectionPage />} />
+        {/* Public Routes */}
+        <Route path="/" element={<SectionSelectionPage />} />
+        <Route path="/reading" element={<ReadingSectionPage />} />
+        <Route path="/listening" element={<ListeningSectionPage />} />
+        <Route path="/speaking" element={<SpeakingSectionPage />} />
+        <Route path="/writing" element={<WritingSectionPage />} />
         <Route path="/review" element={<ReviewPage />} />
+
+        {/* Admin Routes */}
+        <Route path="/admin/*" element={<AdminRoutes />} />
+
+        {/* Fallback route */}
+        <Route path="*" element={<div>Page Not Found</div>} />
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
-}
+};
 
 export default App;
