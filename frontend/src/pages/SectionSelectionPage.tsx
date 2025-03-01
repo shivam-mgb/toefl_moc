@@ -87,16 +87,16 @@ const SectionSelectionPage: React.FC = () => {
               onFullTestClick={() => {
                 switch (section.title) {
                   case "Reading Section":
-                    navigate("/reading-section-intro");
+                    navigate("/reading-intro");
                     break;
                   case "Listening Section":
-                    navigate("/listening-section-intro");
+                    navigate("/listening-intro");
                     break;
                   case "Speaking Section":
-                    navigate("/speaking-section-intro");
+                    navigate("/speaking-intro");
                     break;
                   case "Writing Section":
-                    navigate("/writing-section-intro");
+                    navigate("/writing-intro");
                     break;
                   default:
                     console.log("Unknown section:", section.title);

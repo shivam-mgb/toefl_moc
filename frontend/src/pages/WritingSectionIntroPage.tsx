@@ -6,7 +6,7 @@ const WritingSectionIntroPage: React.FC = () => {
   const navigate = useNavigate();
 
   const handleStartTest = () => {
-    navigate('/writing-section');
+    navigate('/writing');
   };
 
   const handlePracticeByTask = () => {

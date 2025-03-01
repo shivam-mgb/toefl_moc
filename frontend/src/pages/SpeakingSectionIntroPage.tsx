@@ -20,7 +20,7 @@ const SpeakingSectionIntroPage: React.FC = () => {
   }, []);
 
   const handleStartTest = () => {
-    navigate('/speaking-section');
+    navigate('/speaking');
   };
 
   return (

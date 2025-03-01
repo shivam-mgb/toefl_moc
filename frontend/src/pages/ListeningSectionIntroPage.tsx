@@ -6,7 +6,7 @@ const ListeningSectionIntroPage: React.FC = () => {
   const navigate = useNavigate();
 
   const handleStartTest = () => {
-    navigate('/listening-section');
+    navigate('/listening');
   };
 
   return (

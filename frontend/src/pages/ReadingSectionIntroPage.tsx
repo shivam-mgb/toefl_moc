@@ -8,7 +8,7 @@ const ReadingSectionIntroPage: React.FC = () => {
 
   // Placeholder handlers
   const handleStartTest = () => {
-    navigate('/reading-section');
+    navigate('/reading');
   };
 
   return (
