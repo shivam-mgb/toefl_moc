@@ -46,6 +46,10 @@ import CreateWritingSection from '../pages/admin/section-creation/CreateWritingS
 // Test Results
 import TestResultsList from '../pages/admin/TestResultList';
 
+
+// Testing paths
+import AdminPanel from '../pages/AdminPanel';
+
 const AdminRoutes: React.FC = () => {
   return (
     <Routes>
@@ -97,6 +101,10 @@ const AdminRoutes: React.FC = () => {
 
       {/* Test Results */}
       <Route path="/test-results" element={<TestResultsList />} />
+
+      {/* Testing paths */}
+      <Route path="/what" element={<AdminPanel />} />
+
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/admin" replace />} />
