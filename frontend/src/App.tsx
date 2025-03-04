@@ -32,6 +32,7 @@ const App: React.FC = () => {
         <Route path="/writing" element={<WritingSectionPage />} />
         <Route path="/review" element={<ReviewPage />} />
 
+
         {/* Admin Routes */}
         <Route path="/admin/*" element={<AdminRoutes />} />
 
