@@ -48,3 +48,20 @@ export interface ReadingSection {
     options: string[];
     correct_answers: string[];
   }
+
+  // Listening section
+  export interface TableQuestion {
+    type: 'table';
+    prompt: string;
+    rows: string[];
+    columns: string[];
+    correct_selections: { row: string; column: string }[];
+  }
+  
+  export interface AudioQuestion {
+    type: 'audio';
+    prompt: string;
+    snippetFile: File | null;
+    options: string[];
+    correct_answers: string[]; // Supports multiple correct answers
+  }

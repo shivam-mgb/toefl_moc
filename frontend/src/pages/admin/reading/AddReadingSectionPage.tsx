@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import PassageInput from '../components/admin/PassageInput';
-import QuestionInput from '../components/admin/QuestionInput';
-import { Question } from '../types/types';
+import PassageInput from '../../../components/admin/PassageInput';
+import QuestionInput from '../../../components/admin/QuestionInput';
+import { Question } from '../../../types/types';
 
 
 const AddReadingSectionPage: React.FC = () => {
