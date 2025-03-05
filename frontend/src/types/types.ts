@@ -65,3 +65,30 @@ export interface ReadingSection {
     options: string[];
     correct_answers: string[]; // Supports multiple correct answers
   }
+
+  // Speaking section
+  // Define state types for each task
+  export interface Task1 {
+    prompt: string;
+  }
+
+  export interface Task2 {
+    passage: string;
+    audioFile: File | null;
+    prompt: string;
+  }
+
+  export interface Task3 extends Task2 {} // Same structure as Task 2
+
+  export interface Task4 {
+    audioFile: File | null;
+    prompt: string;
+  }
+
+  export interface SpeakingSectionState {
+    title: string;
+    task1: Task1;
+    task2: Task2;
+    task3: Task3;
+    task4: Task4;
+  }

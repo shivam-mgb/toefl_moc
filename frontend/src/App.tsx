@@ -14,6 +14,7 @@ import AdminRoutes from './routes/AdminRoutes';
 
 import AddReadingSectionPage from './pages/admin/reading/AddReadingSectionPage';
 import AddListeningSection from './pages/admin/listening/AddListeningSection';
+import AddSpeakingSection from './pages/admin/speaking/AddSpeakingSection';
 
 // CSS imports
 import './App.css';
@@ -38,7 +39,7 @@ const App: React.FC = () => {
         {/* minimal section pages */}
         <Route path="/add-reading-section" element={<AddReadingSectionPage />} />
         <Route path="/add-listening-section" element={<AddListeningSection />} />
-
+        <Route path="/add-speaking-section" element={<AddSpeakingSection />} />
 
 
         {/* Admin Routes */}
