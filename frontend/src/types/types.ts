@@ -67,7 +67,6 @@ export interface ReadingSection {
   }
 
   // Speaking section
-  // Define state types for each task
   export interface Task1 {
     prompt: string;
   }
@@ -91,4 +90,17 @@ export interface ReadingSection {
     task2: Task2;
     task3: Task3;
     task4: Task4;
+  }
+
+  // Writing section
+
+  export interface Task5 {
+    passage: string;
+    prompt: string;
+  }
+
+  export interface WritingSectionState {
+    title: string;
+    task1: Task2;
+    task2: Task5;
   }

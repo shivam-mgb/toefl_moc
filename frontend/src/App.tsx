@@ -15,6 +15,7 @@ import AdminRoutes from './routes/AdminRoutes';
 import AddReadingSectionPage from './pages/admin/reading/AddReadingSectionPage';
 import AddListeningSection from './pages/admin/listening/AddListeningSection';
 import AddSpeakingSection from './pages/admin/speaking/AddSpeakingSection';
+import AddWritingSection from './pages/admin/writing/AddWritingSection';
 
 // CSS imports
 import './App.css';
@@ -40,6 +41,7 @@ const App: React.FC = () => {
         <Route path="/add-reading-section" element={<AddReadingSectionPage />} />
         <Route path="/add-listening-section" element={<AddListeningSection />} />
         <Route path="/add-speaking-section" element={<AddSpeakingSection />} />
+        <Route path="/add-writing-section" element={<AddWritingSection />} />
 
 
         {/* Admin Routes */}
