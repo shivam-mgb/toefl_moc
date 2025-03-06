@@ -8,13 +8,10 @@ import json
 
 # Initialize Flask app
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///toefl.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = 'uploads'  # Base folder for uploaded files
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = os.environ.get('SQLALCHEMY_TRACK_MODIFICATIONS')
+app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER')
 db = SQLAlchemy(app)
-
-# JWT secret key (replace with a secure key in production)
-SECRET_KEY = 'your_secret_key'
 
 # Ensure upload folder and subfolders exist
 folders = ['listening_audios', 'listening_photos', 'speaking_audios', 'writing_audios']
@@ -32,7 +29,7 @@ def admin_required(f):
             return jsonify({'error': 'Missing token'}), 401
         try:
             token = token.split(" ")[1]  # Expecting 'Bearer <token>'
-            payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+            payload = jwt.decode(token, os.environ.get('SECRET_KEY'), algorithms=['HS256'])
             if not payload.get('is_admin'):
                 return jsonify({'error': 'Admin privileges required'}), 403
         except jwt.ExpiredSignatureError:
