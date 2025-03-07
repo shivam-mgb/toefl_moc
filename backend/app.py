@@ -113,9 +113,10 @@ def create_question(question_data, section_type, reading_passage_id=None, listen
 
     # Handle table questions (already supports multiple correct answers)
     elif question.type == 'table':
-        rows = details.get('rows', [])  # List of row labels
-        columns = details.get('columns', [])  # List of column labels
-        correct_answers = details.get('correct_answers', [])  # List of {'row': ..., 'column': ...}
+        # question_data instead of details
+        rows = question_data['rows']
+        columns = question_data['columns']
+        correct_answers = question_data['correct_selections'] # correct_selections for table correct answers
 
         # Create row objects
         row_map = {row_label: TableQuestionRow(question=question, row_label=row_label) 
