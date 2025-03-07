@@ -1,17 +1,28 @@
 from flask import Flask, request, jsonify
-from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
+import datetime
 import jwt
 from functools import wraps
 import os
 import json
 
+from flask_cors import CORS
+
 # Initialize Flask app
 app = Flask(__name__)
+CORS(app, resources={r"/*": {
+    "origins": "http://localhost:5173",  # Match your React frontend origin
+    "methods": ["GET", "POST", "OPTIONS"],  # Include OPTIONS for preflight
+    "allow_headers": ["Content-Type", "Authorization"]  # Allow JSON headers
+}})
+
+# Load configuration from environment variables
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = os.environ.get('SQLALCHEMY_TRACK_MODIFICATIONS')
 app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER')
-db = SQLAlchemy(app)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+
 
 # Ensure upload folder and subfolders exist
 folders = ['listening_audios', 'listening_photos', 'speaking_audios', 'writing_audios']
@@ -29,8 +40,8 @@ def admin_required(f):
             return jsonify({'error': 'Missing token'}), 401
         try:
             token = token.split(" ")[1]  # Expecting 'Bearer <token>'
-            payload = jwt.decode(token, os.environ.get('SECRET_KEY'), algorithms=['HS256'])
-            if not payload.get('is_admin'):
+            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            if not payload.get('role') or payload.get('role') != 'admin' :
                 return jsonify({'error': 'Admin privileges required'}), 403
         except jwt.ExpiredSignatureError:
             return jsonify({'error': 'Token expired'}), 401
@@ -48,10 +59,23 @@ def save_file(file, subfolder):
         return f'/{app.config["UPLOAD_FOLDER"]}/{subfolder}/{filename}'
     return None
 
+# Helper function to generate JWT token
+def generate_token(user):
+    """Generate a JWT token for the user with a 24-hour expiration."""
+    payload = {
+        'user_id': user.id,
+        'role': user.role,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+    }
+    token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
+    return token
+
 # Database Models
 from models import db, User, Section, ListeningAudio, ReadingPassage, \
                     Question, Option, TableQuestionRow, TableQuestionColumn, \
                     CorrectAnswer, SpeakingTask, WritingTask
+
+db.init_app(app)
 
 
 
@@ -113,6 +137,95 @@ def create_question(question_data, section_type, reading_passage_id=None):
     db.session.commit()
     return question
 
+# Before request handler
+@app.before_request
+def log_request_info():
+    print("=== Incoming Request ===")
+    print(f"Method: {request.method}")
+    print(f"URL: {request.url}")
+    print(f"Headers: {request.headers}")
+
+    # Handle different content types
+    if request.content_type:
+        if request.content_type.startswith('multipart/form-data'):
+            print(f"Form Data: {request.form.to_dict()}")
+            print(f"Files: {request.files.to_dict()}")
+        elif request.content_type == 'application/json':
+            print(f"JSON Body: {request.get_json(silent=True)}")
+        else:
+            print(f"Raw Body: {request.get_data(as_text=True)}")
+    else:
+        print("No body content")
+    print("=====================")
+
+# Registration endpoint
+@app.route('/register', methods=['POST'])
+def register():
+    """Register a new user with the role 'student'."""
+    data = request.get_json()
+    if not data:
+        print('missing json data')
+        return jsonify({'error': 'Missing JSON data'}), 400
+
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
+
+    if not all([username, email, password]):
+        print('missing required fields')
+        return jsonify({'error': 'Missing required fields'}), 400
+
+    # Check for existing username or email
+    existing_user = User.query.filter((User.username == username) | (User.email == email)).first()
+    if existing_user:
+        print('username or email already exists')
+        return jsonify({'error': 'Username or email already exists'}), 400
+
+    # Create new user with role 'student'
+    user = User(username=username, email=email, role='admin') # making the role admin for testing. don't forget to swtich it back to student
+    user.set_password(password)
+    db.session.add(user)
+    db.session.commit()
+
+    return jsonify({'message': 'User registered successfully'}), 201
+
+# Login endpoint
+@app.route('/login', methods=['POST'])
+def login():
+    """Authenticate a user and return a JWT token."""
+    data = request.get_json()
+    if not data:
+        print('missing json data')
+        return jsonify({'error': 'Missing JSON data'}), 400
+
+    email = data.get('email')
+    password = data.get('password')
+
+    if not all([email, password]):
+        print('missing required fields')
+        return jsonify({'error': 'Missing required fields'}), 400
+
+    user = User.query.filter_by(email=email).first()
+    if user and user.check_password(password):
+        token = generate_token(user)
+        return jsonify({
+            'token': token,
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email
+            }
+        }), 200
+    else:
+        return jsonify({'error': 'Invalid credentials'}), 401
+
+# Optional logout endpoint (client-side token discard recommended)
+@app.route('/logout', methods=['POST'])
+def logout():
+    """Logout endpoint (client should discard token)."""
+    return jsonify({'message': 'Logout successful'}), 200
+
+
 @app.route('/reading', methods=['POST'])
 @admin_required
 def create_reading_section():
@@ -154,6 +267,8 @@ def create_reading_section():
 @app.route('/listening', methods=['POST'])
 @admin_required
 def create_listening_section():
+    print(f"Content-Type: {request.content_type}")
+    print(f"Headers: {request.headers}")
     if 'sectionData' not in request.form:
         return jsonify({'error': 'Missing sectionData'}), 400
     

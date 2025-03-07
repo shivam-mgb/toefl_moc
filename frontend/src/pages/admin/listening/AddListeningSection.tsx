@@ -1,38 +1,20 @@
+// src/components/admin/AddListeningSection.tsx
 import { useReducer } from 'react';
-import MultipleToSingleInput from '../../../components/admin/MultipleToSingleInput';
+import { createListeningSection } from '../../../api/api';
+import MultipleToSingleInput from '../../../components/admin/MultipleToMultipleInput';
 import MultipleToMultipleInput from '../../../components/admin/MultipleToMultipleInput';
 import TableQuestionInput from '../../../components/admin/TableQuestionInput';
 import AudioQuestionInput from '../../../components/admin/AudioQuestionInput';
-
-// Define state types
-interface Audio {
-  id: number;
-  title: string;
-  audioFile: File | null;
-  photoFile: File | null;
-  questions: Question[];
-}
-
-interface Question {
-  id: number;
-  type: string;
-  prompt: string;
-  details: any; // Specific to the question type
-}
-
-interface State {
-  title: string;
-  audios: Audio[];
-}
+import { ListeningSection, Question, ListeningSectionRequest } from '../../../types/types';
 
 // Initial state
-const initialState: State = {
+const initialState: ListeningSection = {
   title: '',
   audios: [],
 };
 
 // Reducer function to manage state updates
-function reducer(state: State, action: any): State {
+function reducer(state: ListeningSection, action: any): ListeningSection {
   switch (action.type) {
     case 'UPDATE_SECTION_TITLE':
       return { ...state, title: action.payload };
@@ -41,7 +23,7 @@ function reducer(state: State, action: any): State {
         ...state,
         audios: [
           ...state.audios,
-          { id: Date.now(), title: '', audioFile: null, photoFile: null, questions: [] },
+          { id: Date.now().toString(), title: '', audioFile: null, photoFile: null, questions: [] },
         ],
       };
     case 'UPDATE_AUDIO_TITLE':
@@ -76,7 +58,10 @@ function reducer(state: State, action: any): State {
           idx === aiAdd
             ? {
                 ...audio,
-                questions: [...audio.questions, { id: Date.now(), type: '', prompt: '', details: {} }],
+                questions: [
+                  ...audio.questions,
+                  { id: Date.now().toString(), type: '', prompt: '' } as Question | any,
+                ],
               }
             : audio
         ),
@@ -120,7 +105,7 @@ function reducer(state: State, action: any): State {
             ? {
                 ...audio,
                 questions: audio.questions.map((question, qIdx) =>
-                  qIdx === qiDetails ? { ...question, details } : question
+                  qIdx === qiDetails ? { ...question, ...details } : question
                 ),
               }
             : audio
@@ -140,116 +125,33 @@ function AddListeningSection() {
   };
 
   // Handler to save the section
-  const handleSave = () => {
-    const formData = new FormData();
-    formData.append('title', state.title);
-
-    state.audios.forEach((audio, index) => {
-      formData.append(`audios[${index}][id]`, audio.id.toString());
-      formData.append(`audios[${index}][title]`, audio.title);
-      if (audio.audioFile) {
-        formData.append(`audios[${index}][audioFile]`, audio.audioFile);
+  const handleSave = async () => {
+    try {
+      console.log('state is: ', state);
+      
+      // Validate required fields
+      if (!state.title) throw new Error('Section title is required');
+      if (state.audios.some(audio => !audio.audioFile)) {
+        throw new Error('All audios must have an audio file');
       }
-      if (audio.photoFile) {
-        formData.append(`audios[${index}][photoFile]`, audio.photoFile);
-      }
-      // Safeguard: Ensure audio.questions is an array before iterating
-      const questions = audio.questions || [];
-      questions.forEach((question, qIndex) => {
-        formData.append(`audios[${index}][questions][${qIndex}][id]`, question.id.toString());
-        formData.append(`audios[${index}][questions][${qIndex}][type]`, question.type);
-        formData.append(`audios[${index}][questions][${qIndex}][prompt]`, question.prompt);
-        if (question.type === 'multiple_choice_single') {
-          formData.append(
-            `audios[${index}][questions][${qIndex}][details][prompt]`,
-            question.details.prompt
-          );
-          question.details.options.forEach((option: string, oIndex: number) => {
-            formData.append(
-              `audios[${index}][questions][${qIndex}][details][options][${oIndex}]`,
-              option
-            );
-          });
-          formData.append(
-            `audios[${index}][questions][${qIndex}][details][correct_answer]`,
-            question.details.correct_answer
-          );
-        } else if (question.type === 'multiple_choice_multiple') {
-          formData.append(
-            `audios[${index}][questions][${qIndex}][details][prompt]`,
-            question.details.prompt
-          );
-          question.details.options.forEach((option: string, oIndex: number) => {
-            formData.append(
-              `audios[${index}][questions][${qIndex}][details][options][${oIndex}]`,
-              option
-            );
-          });
-          question.details.correct_answers.forEach((answer: string, aIndex: number) => {
-            formData.append(
-              `audios[${index}][questions][${qIndex}][details][correct_answers][${aIndex}]`,
-              answer
-            );
-          });
-        } else if (question.type === 'table') {
-          formData.append(
-            `audios[${index}][questions][${qIndex}][details][prompt]`,
-            question.details.prompt
-          );
-          question.details.rows.forEach((row: string, rIndex: number) => {
-            formData.append(
-              `audios[${index}][questions][${qIndex}][details][rows][${rIndex}]`,
-              row
-            );
-          });
-          question.details.columns.forEach((column: string, cIndex: number) => {
-            formData.append(
-              `audios[${index}][questions][${qIndex}][details][columns][${cIndex}]`,
-              column
-            );
-          });
-          question.details.correct_selections.forEach(
-            (selection: { row: string; column: string }, sIndex: number) => {
-              formData.append(
-                `audios[${index}][questions][${qIndex}][details][correct_selections][${sIndex}][row]`,
-                selection.row
-              );
-              formData.append(
-                `audios[${index}][questions][${qIndex}][details][correct_selections][${sIndex}][column]`,
-                selection.column
-              );
-            }
-          );
-        } else if (question.type === 'audio') {
-          formData.append(
-            `audios[${index}][questions][${qIndex}][details][prompt]`,
-            question.details.prompt
-          );
-          if (question.details.snippetFile) {
-            formData.append(
-              `audios[${index}][questions][${qIndex}][details][snippetFile]`,
-              question.details.snippetFile
-            );
-          }
-          question.details.options.forEach((option: string, oIndex: number) => {
-            formData.append(
-              `audios[${index}][questions][${qIndex}][details][options][${oIndex}]`,
-              option
-            );
-          });
-          question.details.correct_answers.forEach((answer: string, aIndex: number) => {
-            formData.append(
-              `audios[${index}][questions][${qIndex}][details][correct_answers][${aIndex}]`,
-              answer
-            );
-          });
-        }
-      });
-    });
 
-    // Simulate sending to server (replace with actual API call)
-    console.log('FormData prepared with blobs:', formData);
-    alert('Section saved with file blobs! Check console for FormData.');
+      const sectionData: ListeningSectionRequest = {
+        title: state.title,
+        audios: state.audios.map(audio => ({
+          title: audio.title,
+          questions: audio.questions,
+        })),
+      };
+      const audioFiles = state.audios.map(audio => audio.audioFile!).filter(Boolean);
+      const photoFiles = state.audios.map(audio => audio.photoFile).filter(Boolean) as File[];
+
+      const response = await createListeningSection(sectionData, audioFiles, photoFiles);
+      console.log('Listening section created:', response);
+      alert('Listening section saved successfully!');
+    } catch (error) {
+      console.error('Error saving listening section:', error);
+      alert(`Failed to save listening section: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   return (
@@ -351,18 +253,19 @@ function AddListeningSection() {
                   className="w-full border border-gray-300 rounded-md p-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select Type</option>
-                  <option value="multiple_choice_single">Multiple to Single</option>
-                  <option value="multiple_choice_multiple">Multiple to Multiple</option>
+                  <option value="multiple_to_single">Multiple to Single</option>
+                  <option value="multiple_to_multiple">Multiple to Multiple</option>
                   <option value="table">Table</option>
                   <option value="audio">Audio</option>
                 </select>
               </div>
 
-              {/* Question Prompt */}
+
               <label className="block text-sm font-medium text-gray-700 mb-1">Prompt</label>
 
+
               {/* Conditional Rendering of Question Input Components */}
-              {question.type === 'multiple_choice_single' && (
+              {question.type === 'multiple_to_single' && (
                 <MultipleToSingleInput
                   onChange={(data) =>
                     dispatch({
@@ -372,7 +275,7 @@ function AddListeningSection() {
                   }
                 />
               )}
-              {question.type === 'multiple_choice_multiple' && (
+              {question.type === 'multiple_to_multiple' && (
                 <MultipleToMultipleInput
                   onChange={(data) =>
                     dispatch({

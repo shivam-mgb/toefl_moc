@@ -1,122 +1,78 @@
-// Base URL for the API (adjust as needed)
-const BASE_URL = 'http://localhost:5000/';
+// src/api.ts
+
+// Base URL for the API (adjust as needed, using Vite env variable for flexibility)
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:5000';
 
 // Utility function to get auth headers
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('token'); 
+  const token = localStorage.getItem('token'); // Adjust based on your auth setup
   if (!token) throw new Error('No authentication token found');
   return {
     Authorization: `Bearer ${token}`,
   };
 };
 
-// Type definitions for request and response data
-interface ListeningSectionRequest {
-  title: string;
-  audios: {
-    title: string;
-    audioFile: File;
-    photoFile?: File;
-    questions: {
-      type: string;
-      prompt: string;
-      details: any;
-    }[];
-  }[];
+// Import interfaces from types.ts
+import {
+  ListeningSectionRequest,
+  ListeningSectionResponse,
+  SpeakingSectionRequest,
+  SpeakingSectionResponse,
+  WritingSectionRequest,
+  WritingSectionResponse,
+  ReadingSectionRequest,
+  ReadingSectionResponse,
+} from '../types/types';
+
+// Register a new user
+export async function register(userData: { username: string; email: string; password: string }) {
+  const response = await fetch(`${BASE_URL}/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(userData),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Registration failed');
+  }
+
+  return response.json(); // Returns { token: string, user: { id: string, username: string, email: string } }
 }
 
-interface ListeningSectionResponse {
-  id: number;
-  title: string;
-  audios: {
-    id: number;
-    title: string;
-    audioUrl: string;
-    photoUrl: string | null;
-    questions: {
-      type: string;
-      prompt: string;
-      details: any;
-    }[];
-  }[];
-}
+// Log in an existing user
+export async function login(credentials: { email: string; password: string }) {
+  const response = await fetch(`${BASE_URL}/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(credentials),
+  });
 
-interface SpeakingSectionRequest {
-  title: string;
-  task1: { prompt: string };
-  task2: { passage: string; audioFile: File; prompt: string };
-  task3: { passage: string; audioFile: File; prompt: string };
-  task4: { audioFile: File; prompt: string };
-}
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Login failed');
+  }
 
-interface SpeakingSectionResponse {
-  id: number;
-  title: string;
-  task1: { prompt: string };
-  task2: { passage: string; audioUrl: string; prompt: string };
-  task3: { passage: string; audioUrl: string; prompt: string };
-  task4: { audioUrl: string; prompt: string };
-}
-
-interface WritingSectionRequest {
-  title: string;
-  task1: { passage: string; audioFile: File; prompt: string };
-  task2: { passage: string; prompt: string };
-}
-
-interface WritingSectionResponse {
-  id: number;
-  title: string;
-  task1: { passage: string; audioUrl: string; prompt: string };
-  task2: { passage: string; prompt: string };
-}
-
-interface ReadingSectionRequest {
-  title: string;
-  passages: {
-    content: string;
-    questions: {
-      type: string;
-      prompt: string;
-      details: any;
-    }[];
-  }[];
-}
-
-interface ReadingSectionResponse {
-  id: number;
-  title: string;
-  passages: {
-    id: number;
-    content: string;
-    questions: {
-      type: string;
-      prompt: string;
-      details: any;
-    }[];
-  }[];
+  return response.json(); // Returns { token: string, user: { id: string, username: string, email: string } }
 }
 
 // API request functions
-export async function createListeningSection(data: ListeningSectionRequest): Promise<ListeningSectionResponse> {
+export async function createListeningSection(
+  data: ListeningSectionRequest,
+  audioFiles: File[],
+  photoFiles: File[] = []
+): Promise<ListeningSectionResponse> {
   const formData = new FormData();
-  
-  // Prepare section data without files
-  const sectionData = {
-    title: data.title,
-    audios: data.audios.map(audio => ({
-      title: audio.title,
-      questions: audio.questions,
-    })),
-  };
-  formData.append('sectionData', JSON.stringify(sectionData));
+
+  // Append section data without files
+  formData.append('sectionData', JSON.stringify(data));
 
   // Append audio and photo files
-  data.audios.forEach((audio, index) => {
-    formData.append(`audioFiles[${index}]`, audio.audioFile);
-    if (audio.photoFile) {
-      formData.append(`photoFiles[${index}]`, audio.photoFile);
-    }
+  audioFiles.forEach((file, index) => {
+    formData.append(`audioFiles[${index}]`, file);
+  });
+  photoFiles.forEach((file, index) => {
+    formData.append(`photoFiles[${index}]`, file);
   });
 
   const response = await fetch(`${BASE_URL}/listening`, {
@@ -126,29 +82,28 @@ export async function createListeningSection(data: ListeningSectionRequest): Pro
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to create listening section: ${response.statusText}`);
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Failed to create listening section: ${response.statusText}`);
   }
 
   return response.json();
 }
 
-export async function createSpeakingSection(data: SpeakingSectionRequest): Promise<SpeakingSectionResponse> {
+export async function createSpeakingSection(
+  data: SpeakingSectionRequest,
+  task2Audio: File,
+  task3Audio: File,
+  task4Audio: File
+): Promise<SpeakingSectionResponse> {
   const formData = new FormData();
-  
-  // Prepare section data without files
-  const sectionData = {
-    title: data.title,
-    task1: data.task1,
-    task2: { passage: data.task2.passage, prompt: data.task2.prompt },
-    task3: { passage: data.task3.passage, prompt: data.task3.prompt },
-    task4: { prompt: data.task4.prompt },
-  };
-  formData.append('sectionData', JSON.stringify(sectionData));
+
+  // Append section data without files
+  formData.append('sectionData', JSON.stringify(data));
 
   // Append audio files
-  formData.append('task2Audio', data.task2.audioFile);
-  formData.append('task3Audio', data.task3.audioFile);
-  formData.append('task4Audio', data.task4.audioFile);
+  formData.append('task2Audio', task2Audio);
+  formData.append('task3Audio', task3Audio);
+  formData.append('task4Audio', task4Audio);
 
   const response = await fetch(`${BASE_URL}/speaking`, {
     method: 'POST',
@@ -157,25 +112,24 @@ export async function createSpeakingSection(data: SpeakingSectionRequest): Promi
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to create speaking section: ${response.statusText}`);
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Failed to create speaking section: ${response.statusText}`);
   }
 
   return response.json();
 }
 
-export async function createWritingSection(data: WritingSectionRequest): Promise<WritingSectionResponse> {
+export async function createWritingSection(
+  data: WritingSectionRequest,
+  task1Audio: File
+): Promise<WritingSectionResponse> {
   const formData = new FormData();
-  
-  // Prepare section data without files
-  const sectionData = {
-    title: data.title,
-    task1: { passage: data.task1.passage, prompt: data.task1.prompt },
-    task2: data.task2,
-  };
-  formData.append('sectionData', JSON.stringify(sectionData));
+
+  // Append section data without files
+  formData.append('sectionData', JSON.stringify(data));
 
   // Append audio file
-  formData.append('task1Audio', data.task1.audioFile);
+  formData.append('task1Audio', task1Audio);
 
   const response = await fetch(`${BASE_URL}/writing`, {
     method: 'POST',
@@ -184,13 +138,16 @@ export async function createWritingSection(data: WritingSectionRequest): Promise
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to create writing section: ${response.statusText}`);
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Failed to create writing section: ${response.statusText}`);
   }
 
   return response.json();
 }
 
-export async function createReadingSection(data: ReadingSectionRequest): Promise<ReadingSectionResponse> {
+export async function createReadingSection(
+  data: ReadingSectionRequest
+): Promise<ReadingSectionResponse> {
   const response = await fetch(`${BASE_URL}/reading`, {
     method: 'POST',
     headers: {
@@ -201,7 +158,8 @@ export async function createReadingSection(data: ReadingSectionRequest): Promise
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to create reading section: ${response.statusText}`);
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Failed to create reading section: ${response.statusText}`);
   }
 
   return response.json();

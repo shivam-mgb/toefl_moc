@@ -1,5 +1,10 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import React from 'react';
+
+import Register from './components/auth/Register';
+import Login from './components/auth/Login';
+import { AuthProvider } from './context/AuthContext';
+
 import ReadingSectionIntroPage from './pages/ReadingSectionIntroPage';
 import ListeningSectionIntroPage from './pages/ListeningSectionIntroPage';
 import SpeakingSectionIntroPage from './pages/SpeakingSectionIntroPage';
@@ -23,34 +28,41 @@ import './App.css';
 
 const App: React.FC = () => {
   return (
-    <Router>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<SectionSelectionPage />} />
-        <Route path='/reading-intro' element={<ReadingSectionIntroPage />} />
-        <Route path='/listening-intro' element={<ListeningSectionIntroPage />} />
-        <Route path='/speaking-intro' element={<SpeakingSectionIntroPage />} />
-        <Route path='/writing-intro' element={<WritingSectionIntroPage />} />
-        <Route path="/reading" element={<ReadingSectionPage />} />
-        <Route path="/listening" element={<ListeningSectionPage />} />
-        <Route path="/speaking" element={<SpeakingSectionPage />} />
-        <Route path="/writing" element={<WritingSectionPage />} />
-        <Route path="/review" element={<ReviewPage />} />
+    
+      <Router>
+        <AuthProvider>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<SectionSelectionPage />} />
+          <Route path='/register' element={<Register />} />
+          <Route path='/login' element={<Login />} />
 
-        {/* minimal section pages */}
-        <Route path="/add-reading-section" element={<AddReadingSectionPage />} />
-        <Route path="/add-listening-section" element={<AddListeningSection />} />
-        <Route path="/add-speaking-section" element={<AddSpeakingSection />} />
-        <Route path="/add-writing-section" element={<AddWritingSection />} />
+          <Route path='/reading-intro' element={<ReadingSectionIntroPage />} />
+          <Route path='/listening-intro' element={<ListeningSectionIntroPage />} />
+          <Route path='/speaking-intro' element={<SpeakingSectionIntroPage />} />
+          <Route path='/writing-intro' element={<WritingSectionIntroPage />} />
+          <Route path="/reading" element={<ReadingSectionPage />} />
+          <Route path="/listening" element={<ListeningSectionPage />} />
+          <Route path="/speaking" element={<SpeakingSectionPage />} />
+          <Route path="/writing" element={<WritingSectionPage />} />
+          <Route path="/review" element={<ReviewPage />} />
+
+          {/* minimal section pages */}
+          <Route path="/add-reading-section" element={<AddReadingSectionPage />} />
+          <Route path="/add-listening-section" element={<AddListeningSection />} />
+          <Route path="/add-speaking-section" element={<AddSpeakingSection />} />
+          <Route path="/add-writing-section" element={<AddWritingSection />} />
 
 
-        {/* Admin Routes */}
-        <Route path="/admin/*" element={<AdminRoutes />} />
+          {/* Admin Routes */}
+          <Route path="/admin/*" element={<AdminRoutes />} />
 
-        {/* Fallback route */}
-        <Route path="*" element={<div>Page Not Found</div>} />
-      </Routes>
-    </Router>
+          {/* Fallback route */}
+          <Route path="*" element={<div>Page Not Found</div>} />
+        </Routes>
+        </AuthProvider>
+      </Router>
+    
   );
 };
 
