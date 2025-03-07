@@ -80,22 +80,24 @@ db.init_app(app)
 
 
 
-def create_question(question_data, section_type, reading_passage_id=None):
+def create_question(question_data, section_type, reading_passage_id=None, listening_audio_id=None):
     # Create the question
     question = Question(
         section_type=section_type,
         type=question_data['type'],
         prompt=question_data['prompt'],
-        reading_passage_id=reading_passage_id if section_type == 'reading' else None
+        reading_passage_id=reading_passage_id if section_type == 'reading' else None,
+        listening_audio_id=listening_audio_id if section_type == 'listening' else None
     )
     db.session.add(question)
     db.session.flush()  # Ensure question.id is available
 
-    # Handle options and correct answers for insert-a-text or multiple-choice
-    details = question_data.get('details', {})
-    if question.type in ['multiple-choice', 'insert-a-text']:
-        options = details.get('options', [])  # List of option texts
-        corrects = details.get('correct', [])  # List of correct option texts
+    # Handle options and correct answers for insert-a-text or multiple-choice (single or multiple)
+    # not details instead options and correct_answers
+    # would have to implement if the inserted question options and corrects exist in the question_data
+    if question.type in ['multiple_to_multiple', 'insert-a-text', 'multiple_to_single']:
+        options = question_data['options']
+        corrects = question_data['correct_answers']  
 
         # Map options to their database objects
         option_map = {}
@@ -267,8 +269,6 @@ def create_reading_section():
 @app.route('/listening', methods=['POST'])
 @admin_required
 def create_listening_section():
-    print(f"Content-Type: {request.content_type}")
-    print(f"Headers: {request.headers}")
     if 'sectionData' not in request.form:
         return jsonify({'error': 'Missing sectionData'}), 400
     
