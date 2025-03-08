@@ -95,6 +95,14 @@ class TableQuestionColumn(db.Model):
     question_id = db.Column(db.Integer, db.ForeignKey('questions.id'), nullable=False)
     column_label = db.Column(db.Text, nullable=False)
 
+# Question Audio table Model
+class QuestionAudio(db.Model):
+    __tablename__ = 'question_audios'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    question_id = db.Column(db.Integer, db.ForeignKey('questions.id'), nullable=False)
+    audio_url = db.Column(db.String(255), nullable=False)
+
+
 # Correct Answers Model
 class CorrectAnswer(db.Model):
     __tablename__ = 'correct_answers'

@@ -60,19 +60,20 @@ export async function login(credentials: { email: string; password: string }) {
 export async function createListeningSection(
   data: ListeningSectionRequest,
   audioFiles: File[],
-  photoFiles: File[] = []
+  photoFiles: File[] = [],
+  questionSnippetFiles: { audioIdx: number; questionIdx: number; file: File }[] = []
 ): Promise<ListeningSectionResponse> {
   const formData = new FormData();
 
-  // Append section data without files
   formData.append('sectionData', JSON.stringify(data));
-
-  // Append audio and photo files
   audioFiles.forEach((file, index) => {
     formData.append(`audioFiles[${index}]`, file);
   });
   photoFiles.forEach((file, index) => {
     formData.append(`photoFiles[${index}]`, file);
+  });
+  questionSnippetFiles.forEach(({ audioIdx, questionIdx, file }) => {
+    formData.append(`questionSnippetFiles[${audioIdx}][${questionIdx}]`, file);
   });
 
   const response = await fetch(`${BASE_URL}/listening`, {
@@ -83,7 +84,7 @@ export async function createListeningSection(
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `Failed to create listening section: ${response.statusText}`);
+    throw new Error(errorData.message || `Failed to create: ${response.statusText}`);
   }
 
   return response.json();

@@ -25,7 +25,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 
 
 # Ensure upload folder and subfolders exist
-folders = ['listening_audios', 'listening_photos', 'speaking_audios', 'writing_audios']
+folders = ['listening_audios', 'listening_photos', 'question_audios', 'speaking_audios', 'writing_audios']
 for folder in folders:
     path = os.path.join(app.config['UPLOAD_FOLDER'], folder)
     if not os.path.exists(path):
@@ -73,14 +73,14 @@ def generate_token(user):
 # Database Models
 from models import db, User, Section, ListeningAudio, ReadingPassage, \
                     Question, Option, TableQuestionRow, TableQuestionColumn, \
-                    CorrectAnswer, SpeakingTask, WritingTask
+                    CorrectAnswer, SpeakingTask, WritingTask, QuestionAudio
 
 db.init_app(app)
 
 
 
 
-def create_question(question_data, section_type, reading_passage_id=None, listening_audio_id=None):
+def create_question(question_data, section_type, reading_passage_id=None, listening_audio_id=None, audio_file=None):
     # Create the question
     question = Question(
         section_type=section_type,
@@ -95,7 +95,21 @@ def create_question(question_data, section_type, reading_passage_id=None, listen
     # Handle options and correct answers for insert-a-text or multiple-choice (single or multiple)
     # not details instead options and correct_answers
     # would have to implement if the inserted question options and corrects exist in the question_data
-    if question.type in ['multiple_to_multiple', 'insert-a-text', 'multiple_to_single']:
+    if question.type in ['multiple_to_multiple', 'insert-a-text', 'multiple_to_single', 'audio']:
+        if question.type == 'audio' and audio_file:
+            # Save the audio file
+            filename = secure_filename(audio_file.filename)
+            audio_path = os.path.join(app.config['UPLOAD_FOLDER'], 'question_audios', filename)
+            audio_file.save(audio_path)
+            print(f"Audio saved to: {audio_path}")
+
+            # Create QuestionAudio record
+            question_audio = QuestionAudio(
+                question_id=question.id,
+                audio_url=audio_path  # Or use a URL if hosted elsewhere
+            )
+            db.session.add(question_audio)
+            
         options = question_data['options']
         corrects = question_data['correct_answers']  
 
@@ -305,8 +319,9 @@ def create_listening_section():
         audio = ListeningAudio(title=audio_title, audio_url=audio_url, photo_url=photo_url, section=section)
         db.session.add(audio)
         
-        for question_data in audio_data.get('questions', []):
-            create_question(question_data, 'listening', listening_audio_id=audio.id)
+        for indx, question_data in enumerate(audio_data.get('questions', [])):
+            question_audio = request.files.get(f'questionSnippetFiles[{i}][{indx}]')
+            create_question(question_data, 'listening', listening_audio_id=audio.id, audio_file=question_audio)
 
     db.session.commit()
     

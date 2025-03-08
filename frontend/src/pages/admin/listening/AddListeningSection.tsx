@@ -126,33 +126,49 @@ function AddListeningSection() {
 
   // Handler to save the section
   const handleSave = async () => {
-    try {
-      console.log('state is: ', state);
-      
-      // Validate required fields
-      if (!state.title) throw new Error('Section title is required');
-      if (state.audios.some(audio => !audio.audioFile)) {
-        throw new Error('All audios must have an audio file');
-      }
-
-      const sectionData: ListeningSectionRequest = {
-        title: state.title,
-        audios: state.audios.map(audio => ({
-          title: audio.title,
-          questions: audio.questions,
-        })),
-      };
-      const audioFiles = state.audios.map(audio => audio.audioFile!).filter(Boolean);
-      const photoFiles = state.audios.map(audio => audio.photoFile).filter(Boolean) as File[];
-
-      const response = await createListeningSection(sectionData, audioFiles, photoFiles);
-      console.log('Listening section created:', response);
-      alert('Listening section saved successfully!');
-    } catch (error) {
-      console.error('Error saving listening section:', error);
-      alert(`Failed to save listening section: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  try {
+    if (!state.title) throw new Error('Section title is required');
+    if (state.audios.some(audio => !audio.audioFile)) {
+      throw new Error('All audios must have an audio file');
     }
-  };
+
+    // Prepare sectionData without files
+    const sectionData = {
+      title: state.title,
+      audios: state.audios.map(audio => ({
+        title: audio.title,
+        questions: audio.questions.map(question => {
+          if (question.type === 'audio') {
+            return { ...question, snippetFile: null }; // Remove file from data
+          }
+          return question;
+        }),
+      })),
+    };
+
+    const audioFiles = state.audios.map(audio => audio.audioFile!).filter(Boolean);
+    const photoFiles = state.audios.map(audio => audio.photoFile).filter(Boolean) as File[];
+
+    // Collect question audio files with indices
+    const questionSnippetFiles = state.audios.flatMap((audio, audioIdx) =>
+      audio.questions
+        .map((question, questionIdx) => {
+          if (question.type === 'audio' && question.snippetFile) {
+            return { audioIdx, questionIdx, file: question.snippetFile };
+          }
+          return null;
+        })
+        .filter((item) => item !== null) as { audioIdx: number; questionIdx: number; file: File }[]
+    );
+
+    const response = await createListeningSection(sectionData, audioFiles, photoFiles, questionSnippetFiles);
+    console.log('Listening section created:', response);
+    alert('Listening section saved successfully!');
+  } catch (error) {
+    console.error('Error saving listening section:', error);
+    alert(`Failed to save: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+};
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
