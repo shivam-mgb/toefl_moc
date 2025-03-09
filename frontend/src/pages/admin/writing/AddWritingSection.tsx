@@ -1,15 +1,16 @@
 import { useReducer } from 'react';
-import { WritingSectionState } from '../../../types/types';
+import { createWritingSection } from '../../../api/api';
+import { WritingSection } from '../../../types/types';
 
 // Initial state
-const initialState: WritingSectionState = {
+const initialState: WritingSection = {
   title: '',
   task1: { passage: '', audioFile: null, prompt: '' },
   task2: { passage: '', prompt: '' },
 };
 
 // Reducer to manage state updates
-function reducer(state: WritingSectionState, action: any): WritingSectionState {
+function reducer(state: WritingSection, action: any): WritingSection {
   switch (action.type) {
     case 'UPDATE_TITLE':
       return { ...state, title: action.payload };
@@ -32,25 +33,31 @@ function AddWritingSection() {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   // Handler to save the section
-  const handleSave = () => {
-    const formData = new FormData();
-    formData.append('title', state.title);
+  const handleSave = async () => {
+      try {
+        // Validation
+        if (!state.title) throw new Error('Section title is required');
+        if (!state.task1.audioFile) throw new Error('Task 1 audio file is required');
 
-    // Task 1: Passage, audio file (blob), and prompt
-    formData.append('task1[passage]', state.task1.passage);
-    if (state.task1.audioFile) {
-      formData.append('task1[audioFile]', state.task1.audioFile);
-    }
-    formData.append('task1[prompt]', state.task1.prompt);
-
-    // Task 2: Passage and prompt
-    formData.append('task2[passage]', state.task2.passage);
-    formData.append('task2[prompt]', state.task2.prompt);
-
-    // Simulate submission (replace with your API call)
-    console.log('FormData prepared:', formData);
-    alert('Writing section saved successfully! Check console for details.');
-  };
+  
+        // Prepare data for API
+        const sectionData = {
+          title: state.title,
+          task1: { passage: state.task1.passage, prompt: state.task1.prompt },
+          task2: { passage: state.task2.passage, prompt: state.task2.prompt },
+        };
+  
+        const response = await createWritingSection(
+          sectionData,
+          state.task1.audioFile!
+        );
+        console.log('Writing section created:', response);
+        alert('Writing section saved successfully!');
+      } catch (error) {
+        console.error('Error saving writing section:', error);
+        alert(`Failed to save: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    };
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
