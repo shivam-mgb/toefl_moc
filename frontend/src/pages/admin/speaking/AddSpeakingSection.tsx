@@ -1,8 +1,10 @@
 import { useReducer } from 'react';
-import { SpeakingSectionState } from '../../../types/types';
+import { createSpeakingSection } from '../../../api/api';
+import { SpeakingSection } from '../../../types/types';
 
 // Initial state
-const initialState: SpeakingSectionState = {
+const initialState: SpeakingSection = {
+  id: undefined, // Optional, added by backend
   title: '',
   task1: { prompt: '' },
   task2: { passage: '', audioFile: null, prompt: '' },
@@ -11,7 +13,7 @@ const initialState: SpeakingSectionState = {
 };
 
 // Reducer to manage state updates
-function reducer(state: SpeakingSectionState, action: any): SpeakingSectionState {
+function reducer(state: SpeakingSection, action: any): SpeakingSection {
   switch (action.type) {
     case 'UPDATE_TITLE':
       return { ...state, title: action.payload };
@@ -42,36 +44,35 @@ function AddSpeakingSection() {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   // Handler to save the section
-  const handleSave = () => {
-    const formData = new FormData();
-    formData.append('title', state.title);
+  const handleSave = async () => {
+    try {
+      // Validation
+      if (!state.title) throw new Error('Section title is required');
+      if (!state.task2.audioFile) throw new Error('Task 2 audio file is required');
+      if (!state.task3.audioFile) throw new Error('Task 3 audio file is required');
+      if (!state.task4.audioFile) throw new Error('Task 4 audio file is required');
 
-    // Task 1: Prompt only
-    formData.append('task1[prompt]', state.task1.prompt);
+      // Prepare data for API
+      const sectionData = {
+        title: state.title,
+        task1: state.task1,
+        task2: { passage: state.task2.passage, prompt: state.task2.prompt },
+        task3: { passage: state.task3.passage, prompt: state.task3.prompt },
+        task4: { prompt: state.task4.prompt },
+      };
 
-    // Task 2: Passage, audio file (blob), and prompt
-    formData.append('task2[passage]', state.task2.passage);
-    if (state.task2.audioFile) {
-      formData.append('task2[audioFile]', state.task2.audioFile);
+      const response = await createSpeakingSection(
+        sectionData,
+        state.task2.audioFile!,
+        state.task3.audioFile!,
+        state.task4.audioFile!
+      );
+      console.log('Speaking section created:', response);
+      alert('Speaking section saved successfully!');
+    } catch (error) {
+      console.error('Error saving speaking section:', error);
+      alert(`Failed to save: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-    formData.append('task2[prompt]', state.task2.prompt);
-
-    // Task 3: Passage, audio file (blob), and prompt
-    formData.append('task3[passage]', state.task3.passage);
-    if (state.task3.audioFile) {
-      formData.append('task3[audioFile]', state.task3.audioFile);
-    }
-    formData.append('task3[prompt]', state.task3.prompt);
-
-    // Task 4: Audio file (blob) and prompt
-    if (state.task4.audioFile) {
-      formData.append('task4[audioFile]', state.task4.audioFile);
-    }
-    formData.append('task4[prompt]', state.task4.prompt);
-
-    // Simulate sending to server (replace with actual API call)
-    console.log('FormData prepared with blobs:', formData);
-    alert('Speaking section saved successfully! Check console for FormData.');
   };
 
   return (
@@ -216,10 +217,10 @@ function AddSpeakingSection() {
       </div>
 
       {/* Save Button */}
-      <div className="flex justify-end">
+      <div className="flex space-x-4">
         <button
           onClick={handleSave}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
         >
           Save Section
         </button>
