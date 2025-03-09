@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
-from werkzeug.security import generate_password_hash, check_password_hash
 import datetime
 import jwt
 from functools import wraps
@@ -113,7 +112,7 @@ def create_question(question_data, section_type, reading_passage_id=None, listen
         else:
             options = question_data['options']
 
-        if question.type == 'insert_text' or question.type == 'multiple_to_single':
+        if question.type in ['insert_text', 'multiple_to_single', 'audio']:
             corrects = question_data['correct_answer']
         else:
             corrects = question_data['correct_answers']
@@ -247,6 +246,7 @@ def logout():
     """Logout endpoint (client should discard token)."""
     return jsonify({'message': 'Logout successful'}), 200
 
+# Readign section
 
 @app.route('/reading', methods=['POST'])
 @admin_required
@@ -288,6 +288,59 @@ def create_reading_section():
         'passages': [{'id': p.id, 'title': p.title, 'content': p.content} 
                     for p in section.reading_passages]
     }), 201
+
+@app.route('/reading/<int:section_id>', methods=['GET'])
+def get_reading_section(section_id):
+    section = Section.query.filter_by(id=section_id, section_type='reading').first()
+    if not section:
+        return jsonify({'error': 'Section not found'}), 404
+
+    passages = ReadingPassage.query.filter_by(section_id=section.id).all()
+    passages_data = []
+    for passage in passages:
+        questions = Question.query.filter_by(reading_passage_id=passage.id).all()
+        questions_data = [{'id': q.id, 'type': q.type, 'prompt': q.prompt} for q in questions]
+        passages_data.append({
+            'id': passage.id,
+            'title': passage.title,
+            'content': passage.content,
+            'questions': questions_data
+        })
+
+    return jsonify({
+        'id': section.id,
+        'title': section.title,
+        'passages': passages_data
+    }), 200
+
+@app.route('/reading/<int:section_id>', methods=['PUT'])
+@admin_required
+def update_reading_section(section_id):
+    section = Section.query.filter_by(id=section_id, section_type='reading').first()
+    if not section:
+        return jsonify({'error': 'Section not found'}), 404
+
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'Missing JSON data'}), 400
+
+    section.title = data.get('title', section.title)
+    db.session.commit()
+
+    return jsonify({'message': 'Section updated successfully'}), 200
+
+@app.route('/reading/<int:section_id>', methods=['DELETE'])
+@admin_required
+def delete_reading_section(section_id):
+    section = Section.query.filter_by(id=section_id, section_type='reading').first()
+    if not section:
+        return jsonify({'error': 'Section not found'}), 404
+
+    db.session.delete(section)
+    db.session.commit()
+    return jsonify({'message': 'Section deleted successfully'}), 200
+
+# Listening section
 
 @app.route('/listening', methods=['POST'])
 @admin_required
@@ -339,6 +392,73 @@ def create_listening_section():
         'audios': [{'id': a.id, 'title': a.title, 'audio_url': a.audio_url, 'photo_url': a.photo_url} 
                   for a in section.listening_audios]
     }), 201
+
+@app.route('/listening/<int:section_id>', methods=['GET'])
+def get_listening_section(section_id):
+    section = Section.query.filter_by(id=section_id, section_type='listening').first()
+    if not section:
+        return jsonify({'error': 'Section not found'}), 404
+
+    audios = ListeningAudio.query.filter_by(section_id=section.id).all()
+    audios_data = []
+    for audio in audios:
+        questions = Question.query.filter_by(listening_audio_id=audio.id).all()
+        questions_data = [{'id': q.id, 'type': q.type, 'prompt': q.prompt} for q in questions]
+        audios_data.append({
+            'id': audio.id,
+            'title': audio.title,
+            'audio_url': audio.audio_url,
+            'photo_url': audio.photo_url,
+            'questions': questions_data
+        })
+
+    return jsonify({
+        'id': section.id,
+        'title': section.title,
+        'audios': audios_data
+    }), 200
+
+@app.route('/listening/<int:section_id>', methods=['PUT'])
+@admin_required
+def update_listening_section(section_id):
+    section = Section.query.filter_by(id=section_id, section_type='listening').first()
+    if not section:
+        return jsonify({'error': 'Section not found'}), 404
+
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'Missing JSON data'}), 400
+
+    section.title = data.get('title', section.title)
+    db.session.commit()
+
+    return jsonify({'message': 'Section updated successfully'}), 200
+
+@app.route('/listening/<int:section_id>', methods=['DELETE'])
+@admin_required
+def delete_listening_section(section_id):
+    section = Section.query.filter_by(id=section_id, section_type='listening').first()
+    if not section:
+        return jsonify({'error': 'Section not found'}), 404
+
+    audios = ListeningAudio.query.filter_by(section_id=section.id).all()
+    for audio in audios:
+        if audio.audio_url:
+            try:
+                os.remove(audio.audio_url.lstrip('/'))
+            except OSError:
+                pass
+        if audio.photo_url:
+            try:
+                os.remove(audio.photo_url.lstrip('/'))
+            except OSError:
+                pass
+
+    db.session.delete(section)
+    db.session.commit()
+    return jsonify({'message': 'Section deleted successfully'}), 200
+
+# Speaking section
 
 @app.route('/speaking', methods=['POST'])
 @admin_required
@@ -400,6 +520,59 @@ def create_speaking_section():
         'tasks': [{'id': t.id, 'task_number': t.task_number, 'passage': t.passage, 
                   'prompt': t.prompt, 'audio_url': t.audio_url} for t in section.speaking_tasks]
     }), 201
+
+@app.route('/speaking/<int:section_id>', methods=['GET'])
+def get_speaking_section(section_id):
+    section = Section.query.filter_by(id=section_id, section_type='speaking').first()
+    if not section:
+        return jsonify({'error': 'Section not found'}), 404
+
+    tasks = SpeakingTask.query.filter_by(section_id=section.id).all()
+    tasks_data = [{'id': t.id, 'task_number': t.task_number, 'passage': t.passage, 
+                   'prompt': t.prompt, 'audio_url': t.audio_url} for t in tasks]
+
+    return jsonify({
+        'id': section.id,
+        'title': section.title,
+        'tasks': tasks_data
+    }), 200
+
+@app.route('/speaking/<int:section_id>', methods=['PUT'])
+@admin_required
+def update_speaking_section(section_id):
+    section = Section.query.filter_by(id=section_id, section_type='speaking').first()
+    if not section:
+        return jsonify({'error': 'Section not found'}), 404
+
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'Missing JSON data'}), 400
+
+    section.title = data.get('title', section.title)
+    db.session.commit()
+
+    return jsonify({'message': 'Section updated successfully'}), 200
+
+@app.route('/speaking/<int:section_id>', methods=['DELETE'])
+@admin_required
+def delete_speaking_section(section_id):
+    section = Section.query.filter_by(id=section_id, section_type='speaking').first()
+    if not section:
+        return jsonify({'error': 'Section not found'}), 404
+
+    tasks = SpeakingTask.query.filter_by(section_id=section.id).all()
+    for task in tasks:
+        if task.audio_url:
+            try:
+                os.remove(task.audio_url.lstrip('/'))
+            except OSError:
+                pass
+
+    db.session.delete(section)
+    db.session.commit()
+    return jsonify({'message': 'Section deleted successfully'}), 200
+
+# Writing section
     
 @app.route('/writing', methods=['POST'])
 @admin_required
@@ -446,6 +619,57 @@ def create_writing_section():
         'tasks': [{'id': t.id, 'task_number': t.task_number, 'passage': t.passage, 
                   'prompt': t.prompt, 'audio_url': t.audio_url} for t in section.writing_tasks]
     }), 201
+
+@app.route('/writing/<int:section_id>', methods=['GET'])
+def get_writing_section(section_id):
+    section = Section.query.filter_by(id=section_id, section_type='writing').first()
+    if not section:
+        return jsonify({'error': 'Section not found'}), 404
+
+    tasks = WritingTask.query.filter_by(section_id=section.id).all()
+    tasks_data = [{'id': t.id, 'task_number': t.task_number, 'passage': t.passage, 
+                   'prompt': t.prompt, 'audio_url': t.audio_url} for t in tasks]
+
+    return jsonify({
+        'id': section.id,
+        'title': section.title,
+        'tasks': tasks_data
+    }), 200
+
+@app.route('/writing/<int:section_id>', methods=['PUT'])
+@admin_required
+def update_writing_section(section_id):
+    section = Section.query.filter_by(id=section_id, section_type='writing').first()
+    if not section:
+        return jsonify({'error': 'Section not found'}), 404
+
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'Missing JSON data'}), 400
+
+    section.title = data.get('title', section.title)
+    db.session.commit()
+
+    return jsonify({'message': 'Section updated successfully'}), 200
+
+@app.route('/writing/<int:section_id>', methods=['DELETE'])
+@admin_required
+def delete_writing_section(section_id):
+    section = Section.query.filter_by(id=section_id, section_type='writing').first()
+    if not section:
+        return jsonify({'error': 'Section not found'}), 404
+
+    tasks = WritingTask.query.filter_by(section_id=section.id).all()
+    for task in tasks:
+        if task.audio_url:
+            try:
+                os.remove(task.audio_url.lstrip('/'))
+            except OSError:
+                pass
+
+    db.session.delete(section)
+    db.session.commit()
+    return jsonify({'message': 'Section deleted successfully'}), 200
 
 # Create database tables
 with app.app_context():

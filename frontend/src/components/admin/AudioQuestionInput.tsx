@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { AudioQuestion } from '../../types/types';
 
 interface AudioQuestionInputProps {
@@ -9,39 +9,31 @@ const AudioQuestionInput: React.FC<AudioQuestionInputProps> = ({ onChange }) => 
   const [prompt, setPrompt] = useState<string>('');
   const [snippetFile, setSnippetFile] = useState<File | null>(null); // Stores the audio snippet blob
   const [options, setOptions] = useState<string[]>(['', '', '', '']);
-  const [correctAnswers, setCorrectAnswers] = useState<string[]>([]);
+  const [correctAnswer, setCorrectAnswer] = useState<string>('');
 
-  // Update an option value
   const updateOption = (index: number, value: string) => {
     const newOptions = [...options];
     newOptions[index] = value;
     setOptions(newOptions);
   };
 
-  // Toggle an option as a correct answer
-  const toggleCorrectAnswer = (option: string) => {
-    setCorrectAnswers((prev) =>
-      prev.includes(option)
-        ? prev.filter((ans) => ans !== option)
-        : [...prev, option]
-    );
-  };
-
-  // Notify parent of changes
-  useEffect(() => {
-    onChange({
-      prompt,
-      snippetFile, // Pass the blob instead of a URL
-      options,
-      correct_answers: correctAnswers,
+  const handleChange = (prompt: string, snippetFile: File | null, options: string[], correctAnswer: string) => {
+    onChange({ 
+      prompt: prompt,
+      snippetFile: snippetFile, 
+      options: options, 
+      correct_answer: correctAnswer
     });
-  }, [prompt, snippetFile, options, correctAnswers, onChange]);
+  };
 
   return (
     <div>
       <textarea
         value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
+        onChange={(e) => {
+          setPrompt(e.target.value)
+          handleChange(e.target.value, snippetFile, options, correctAnswer);
+        }}
         placeholder="Enter question prompt"
         className="w-full p-2 border rounded-md mb-4"
       />
@@ -51,8 +43,9 @@ const AudioQuestionInput: React.FC<AudioQuestionInputProps> = ({ onChange }) => 
           type="file"
           accept="audio/*"
           onChange={(e) => {
-            const file = e.target.files?.[0] || null;
-            setSnippetFile(file);
+            const fl = e.target.files?.[0] || null;
+            setSnippetFile(fl);
+            handleChange(prompt, snippetFile, options, correctAnswer);
           }}
           className="w-full"
         />
@@ -62,21 +55,29 @@ const AudioQuestionInput: React.FC<AudioQuestionInputProps> = ({ onChange }) => 
       </div>
       <p className="font-medium">Options:</p>
       {options.map((option, index) => (
-        <div key={index} className="flex items-center mb-2">
-          <input
-            type="checkbox"
-            checked={correctAnswers.includes(option)}
-            onChange={() => toggleCorrectAnswer(option)}
-            className="mr-2"
-          />
-          <input
-            value={option}
-            onChange={(e) => updateOption(index, e.target.value)}
-            placeholder={`Option ${index + 1}`}
-            className="w-full p-2 border rounded-md"
-          />
-        </div>
+        <input
+          key={index}
+          value={option}
+          onChange={(e) => updateOption(index, e.target.value)}
+          placeholder={`Option ${index + 1}`}
+          className="w-full p-2 border rounded-md mb-2"
+        />
       ))}
+      <select
+        value={correctAnswer}
+        onChange={(e) => {
+          setCorrectAnswer(e.target.value);
+          handleChange( prompt, snippetFile, options, correctAnswer );
+        }}
+        className="w-full p-2 border rounded-md"
+      >
+        <option value="">Select correct answer</option>
+        {options.map((option, index) => (
+          <option key={index} value={option}>
+            {option || `Option ${index + 1}`}
+          </option>
+        ))}
+      </select>
     </div>
   );
 };

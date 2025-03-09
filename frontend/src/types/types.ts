@@ -48,7 +48,7 @@ export interface AudioQuestion extends BaseQuestion {
   prompt: string;
   snippetFile: File | null;
   options: string[];
-  correct_answers: string[];
+  correct_answer: string;
 }
 
 // Union Type for Questions

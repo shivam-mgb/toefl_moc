@@ -1,5 +1,5 @@
 // src/components/TableQuestionInput.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { TableQuestion } from '../../types/types';
 
 interface TableQuestionInputProps {
@@ -48,21 +48,23 @@ const TableQuestionInput: React.FC<TableQuestionInputProps> = ({ onChange }) => 
     });
   };
 
-  // Notify parent of changes
-  useEffect(() => {
-    onChange({
+  const handleChange = (prompt: string, rows: string[], columns: string[], correctSelections: { row: string; column: string }[]) => {
+    onChange({ 
       prompt,
-      rows,
-      columns,
-      correct_selections: correctSelections,
+      rows, 
+      columns, 
+      correct_selections: correctSelections
     });
-  }, [prompt, rows, columns, correctSelections, onChange]);
+  };
 
   return (
     <div>
       <textarea
         value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
+        onChange={(e) => {
+          setPrompt(e.target.value);
+          handleChange(prompt, rows, columns, correctSelections);
+        }}
         placeholder="Enter question prompt"
         className="w-full p-2 border rounded-md mb-4"
       />
@@ -72,7 +74,10 @@ const TableQuestionInput: React.FC<TableQuestionInputProps> = ({ onChange }) => 
           <input
             key={index}
             value={row}
-            onChange={(e) => updateRow(index, e.target.value)}
+            onChange={(e) => {
+              updateRow(index, e.target.value);
+              handleChange(prompt, rows, columns, correctSelections);
+            }}
             placeholder={`Row ${index + 1}`}
             className="w-full p-2 border rounded-md mb-2"
           />
@@ -90,7 +95,10 @@ const TableQuestionInput: React.FC<TableQuestionInputProps> = ({ onChange }) => 
           <input
             key={index}
             value={column}
-            onChange={(e) => updateColumn(index, e.target.value)}
+            onChange={(e) => {
+              updateColumn(index, e.target.value);
+              handleChange(prompt, rows, columns, correctSelections);
+            }}
             placeholder={`Column ${index + 1}`}
             className="w-full p-2 border rounded-md mb-2"
           />
@@ -128,7 +136,10 @@ const TableQuestionInput: React.FC<TableQuestionInputProps> = ({ onChange }) => 
                       checked={correctSelections.some(
                         (sel) => sel.row === row && sel.column === column
                       )}
-                      onChange={() => toggleSelection(row, column)}
+                      onChange={() => {
+                        toggleSelection(row, column);
+                        handleChange(prompt, rows, columns, correctSelections);
+                      }}
                     />
                   </td>
                 ))}
