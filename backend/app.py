@@ -78,8 +78,6 @@ from models import db, User, Section, ListeningAudio, ReadingPassage, \
 db.init_app(app)
 
 
-
-
 def create_question(question_data, section_type, reading_passage_id=None, listening_audio_id=None, audio_file=None):
     # Create the question
     question = Question(
@@ -95,7 +93,7 @@ def create_question(question_data, section_type, reading_passage_id=None, listen
     # Handle options and correct answers for insert-a-text or multiple-choice (single or multiple)
     # not details instead options and correct_answers
     # would have to implement if the inserted question options and corrects exist in the question_data
-    if question.type in ['multiple_to_multiple', 'insert-a-text', 'multiple_to_single', 'audio']:
+    if question.type in ['multiple_to_multiple', 'insert_text', 'multiple_to_single', 'audio', 'prose_summary']:
         if question.type == 'audio' and audio_file:
             # Save the audio file
             filename = secure_filename(audio_file.filename)
@@ -109,9 +107,16 @@ def create_question(question_data, section_type, reading_passage_id=None, listen
                 audio_url=audio_path  # Or use a URL if hosted elsewhere
             )
             db.session.add(question_audio)
-            
-        options = question_data['options']
-        corrects = question_data['correct_answers']  
+        
+        if question.type == 'insert_text':
+            options = ['a','b','c','d']
+        else:
+            options = question_data['options']
+
+        if question.type == 'insert_text' or question.type == 'multiple_to_single':
+            corrects = question_data['correct_answer']
+        else:
+            corrects = question_data['correct_answers']
 
         # Map options to their database objects
         option_map = {}
@@ -262,14 +267,17 @@ def create_reading_section():
     db.session.add(section)
 
     for passage_data in passages_data:
-        content = passage_data.get('content')
-        if not content:
-            return jsonify({'error': 'Missing content in passage'}), 400
+        title = passage_data.get('title')
+        text = passage_data.get('text')
+        if not title or not text:
+            return jsonify({'error': 'Missing title or text in passage'}), 400
 
-        passage = ReadingPassage(title=passage_data.get('title', ''), content=content, section=section)
+        passage = ReadingPassage(title=title, content=text, section=section)
         db.session.add(passage)
+        db.session.flush() # id is not released until flushed or comitted (don't want to commit, yet)
         
         for question_data in passage_data.get('questions', []):
+            print('before creating question: ', question_data)
             create_question(question_data, 'reading', reading_passage_id=passage.id)
 
     db.session.commit()

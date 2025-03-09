@@ -10,8 +10,8 @@ const InsertTextInput: React.FC<InsertTextInputProps> = ({ onChange }) => {
   const [insertionSentence, setInsertionSentence] = useState<string>('');
   const [correctInsertionPoint, setCorrectInsertionPoint] = useState<string>('');
 
-  const handleChange = () => {
-    onChange({ insertion_sentence: insertionSentence, correct_insertion_point: correctInsertionPoint });
+  const handleChange = (sentence: string, insertionPoint: string) => {
+    onChange({ prompt: sentence, correct_answer: insertionPoint });
   };
 
   return (
@@ -20,8 +20,9 @@ const InsertTextInput: React.FC<InsertTextInputProps> = ({ onChange }) => {
       <textarea
         value={insertionSentence}
         onChange={(e) => {
-          setInsertionSentence(e.target.value);
-          handleChange();
+          const newValue = e.target.value;
+          setInsertionSentence(newValue);
+          handleChange(newValue, correctInsertionPoint); // Use latest value directly
         }}
         placeholder="Enter the sentence to insert"
         className="w-full p-2 border rounded-md mb-4"
@@ -30,8 +31,9 @@ const InsertTextInput: React.FC<InsertTextInputProps> = ({ onChange }) => {
       <select
         value={correctInsertionPoint}
         onChange={(e) => {
-          setCorrectInsertionPoint(e.target.value);
-          handleChange();
+          const newValue = e.target.value;
+          setCorrectInsertionPoint(newValue);
+          handleChange(insertionSentence, newValue); // Use latest value directly
         }}
         className="w-full p-2 border rounded-md"
       >

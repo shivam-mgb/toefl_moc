@@ -24,8 +24,8 @@ export interface MultipleToMultipleQuestion extends BaseQuestion {
 
 export interface InsertTextQuestion extends BaseQuestion {
   type: 'insert_text';
-  insertion_sentence: string;
-  correct_insertion_point: string; // e.g., 'a', 'b', 'c', 'd'
+  prompt: string;
+  correct_answer: string; // e.g., 'a', 'b', 'c', 'd'
 }
 
 export interface ProseSummaryQuestion extends BaseQuestion {

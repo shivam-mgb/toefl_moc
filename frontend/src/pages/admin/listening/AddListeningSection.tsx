@@ -5,7 +5,7 @@ import MultipleToSingleInput from '../../../components/admin/MultipleToMultipleI
 import MultipleToMultipleInput from '../../../components/admin/MultipleToMultipleInput';
 import TableQuestionInput from '../../../components/admin/TableQuestionInput';
 import AudioQuestionInput from '../../../components/admin/AudioQuestionInput';
-import { ListeningSection, Question, ListeningSectionRequest } from '../../../types/types';
+import { ListeningSection, Question } from '../../../types/types';
 
 // Initial state
 const initialState: ListeningSection = {
