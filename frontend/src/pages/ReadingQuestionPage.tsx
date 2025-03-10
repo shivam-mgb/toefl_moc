@@ -89,13 +89,10 @@ const ReadingQuestionPage: React.FC<ReadingQuestionPageProps> = ({ passage, onPa
       case 'prose_summary':
         return (
           <ProseSummaryArea
-            questionText={currentQuestion.prompt}
-            options={currentQuestion.options.map((opt, idx) => ({
-              id: String.fromCharCode(97 + idx),
-              text: opt,
-            }))}
+            question={currentQuestion}
             onAnswerSelect={(answer: string[]) => handleAnswerSelect(currentQuestion.id || `q${currentQuestionIndex}`, answer)}
-            questionId={currentQuestion.id || `q${currentQuestionIndex}`}
+            // the answers come as an array of indexes of the answers (like ['0', '3', '2'])
+            // you might need it to submit answers
           />
         );
       case 'table':
@@ -103,7 +100,7 @@ const ReadingQuestionPage: React.FC<ReadingQuestionPageProps> = ({ passage, onPa
       case 'audio':
         return <p>AudioQuestion component not implemented yet.</p>;
       default:
-        return <p>Unsupported question type: {currentQuestion.type}</p>;
+        return <p>Unsupported question type: don't know what the type</p>;
     }
   };
 

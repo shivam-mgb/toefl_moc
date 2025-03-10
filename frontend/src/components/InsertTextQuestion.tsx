@@ -46,14 +46,7 @@ const InsertTextQuestion = ({ questionText, passageText, onAnswerSelect }: Inser
     // Handle clicking an insertion point (selects but doesn’t submit)
     const handleSquareClick = (label: string): void => {
         setSelectedLabel(label);
-    };
-
-    // Handle form submission
-    const handleSubmit = (): void => {
-        if (selectedLabel) {
-            console.log(selectedLabel);
-            onAnswerSelect(selectedLabel);
-        }
+        onAnswerSelect(label);
     };
 
     // Build the render parts
@@ -73,7 +66,9 @@ const InsertTextQuestion = ({ questionText, passageText, onAnswerSelect }: Inser
                     React.createElement('span', {
                         key: `square${i}`,
                         className: `inline-block w-4 h-4 bg-lime-500 cursor-pointer mx-1 hover:bg-lime-600 ${selectedLabel === label ? 'border-2 border-teal-500' : ''}`,
-                        onClick: () => handleSquareClick(label),
+                        onClick: () => {
+                            handleSquareClick(label);
+                        },
                     })
                 );
             }
@@ -97,15 +92,6 @@ const InsertTextQuestion = ({ questionText, passageText, onAnswerSelect }: Inser
             'div',
             { className: 'bg-white rounded-lg shadow-md p-6' },
             React.createElement('div', { className: 'prose max-w-none' }, renderParts),
-            React.createElement(
-                'button',
-                {
-                    className: 'mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400',
-                    onClick: handleSubmit,
-                    disabled: selectedLabel === null, // Disable if no selection
-                },
-                'Submit'
-            )
         )
     );
 };
