@@ -22,6 +22,8 @@ import AddListeningSection from './pages/admin/listening/AddListeningSection';
 import AddSpeakingSection from './pages/admin/speaking/AddSpeakingSection';
 import AddWritingSection from './pages/admin/writing/AddWritingSection';
 
+import TestingPage from './pages/testingPage';
+
 // CSS imports
 import './App.css';
 
@@ -41,7 +43,7 @@ const App: React.FC = () => {
           <Route path='/listening-intro' element={<ListeningSectionIntroPage />} />
           <Route path='/speaking-intro' element={<SpeakingSectionIntroPage />} />
           <Route path='/writing-intro' element={<WritingSectionIntroPage />} />
-          <Route path="/reading" element={<ReadingSectionPage />} />
+          {/* <Route path="/reading" element={<ReadingSectionPage />} /> */}
           <Route path="/listening" element={<ListeningSectionPage />} />
           <Route path="/speaking" element={<SpeakingSectionPage />} />
           <Route path="/writing" element={<WritingSectionPage />} />
@@ -52,6 +54,8 @@ const App: React.FC = () => {
           <Route path="/add-listening-section" element={<AddListeningSection />} />
           <Route path="/add-speaking-section" element={<AddSpeakingSection />} />
           <Route path="/add-writing-section" element={<AddWritingSection />} />
+
+          <Route path='/testing' element={<TestingPage />} />
 
 
           {/* Admin Routes */}

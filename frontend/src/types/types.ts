@@ -4,7 +4,6 @@
 export interface BaseQuestion {
   id?: string; // Optional, added by backend
   type: string;
-  prompt?: string; // Optional for some types
 }
 
 // Question Type Interfaces
@@ -192,7 +191,7 @@ export interface ReadingSectionRequest {
 }
 
 export interface ReadingSectionResponse {
-  id: string;
+  id: number;
   title: string;
   passages: Passage[];
 }
