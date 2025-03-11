@@ -3,7 +3,7 @@ import ReadingPassageArea from '../components/ReadingPassageArea';
 import MultipleChoiceQuestion from '../components/MultipleChoiceQuestion';
 import ProseSummaryArea from '../components/ProseSummaryArea';
 import InsertTextQuestion from '../components/InsertTextQuestion';
-import { Passage, Question } from '../types/types'; // Import from types.ts
+import { Passage } from '../types/types'; 
 
 interface ReadingQuestionPageProps {
   passage: Passage;

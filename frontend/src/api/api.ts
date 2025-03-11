@@ -165,3 +165,51 @@ export async function createReadingSection(
 
   return response.json();
 }
+
+// Get reading section data by test ID
+export async function getReadingSection(testId: string | number): Promise<ReadingSectionResponse> {
+  const response = await fetch(`${BASE_URL}/reading/${testId}`, {
+    method: 'GET',
+    headers: {
+      ...getAuthHeaders(),
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Failed to get reading section: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+// Interface for the reading section submission response
+interface ReadingSubmissionResponse {
+  success: boolean;
+  score?: number;
+  feedback?: string;
+  correctAnswers?: Record<string, any>;
+}
+
+// Submit answers for a complete reading section
+export async function submitReadingAnswers(
+  testId: string | number, 
+  passageAnswers: Record<string, Record<string, string[]>>
+): Promise<ReadingSubmissionResponse> {
+  const response = await fetch(`${BASE_URL}/reading/${testId}/submit`, {
+    method: 'POST',
+    headers: {
+      ...getAuthHeaders(),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ answers: passageAnswers }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Failed to submit reading answers: ${response.statusText}`);
+  }
+
+  return response.json();
+}

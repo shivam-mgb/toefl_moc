@@ -299,11 +299,16 @@ def get_reading_section(section_id):
     passages_data = []
     for passage in passages:
         questions = Question.query.filter_by(reading_passage_id=passage.id).all()
-        questions_data = [{'id': q.id, 'type': q.type, 'prompt': q.prompt} for q in questions]
+        questions_data = []
+        for q in questions:
+            options = Option.query.filter_by(question_id=q.id).all()
+            # options_data = [{'id': o.id, 'option_text': o.option_text} for o in options]
+            options_data = [o.option_text for o in options]
+            questions_data.append({'id': q.id, 'type': q.type, 'prompt': q.prompt, 'options': options_data})
         passages_data.append({
             'id': passage.id,
             'title': passage.title,
-            'content': passage.content,
+            'text': passage.content,
             'questions': questions_data
         })
 
