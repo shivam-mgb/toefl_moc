@@ -17,7 +17,7 @@ const ReadingSectionPage: React.FC = () => {
   const [sectionComplete, setSectionComplete] = useState(false);
   const [sectionTimeRemaining, setSectionTimeRemaining] = useState(600); // 10 minutes in seconds
   const [passageAnswers, setPassageAnswers] = useState<Record<string, any>>({});
-  const [submitting, setSubmitting] = useState(false);
+  // const [submitting, setSubmitting] = useState(false);
   const [submissionResult, setSubmissionResult] = useState<any>(null);
 
   // Fetch the reading section data
@@ -72,7 +72,7 @@ const ReadingSectionPage: React.FC = () => {
   const handleSubmitAllAnswers = async () => {
     if (!testId || !readingSection) return;
     
-    setSubmitting(true);
+    // setSubmitting(true);
     try {
       const result = await submitReadingAnswers(testId, passageAnswers);
       setSubmissionResult(result);
@@ -82,7 +82,7 @@ const ReadingSectionPage: React.FC = () => {
       console.error('Error submitting answers:', error);
       setError('Failed to submit answers. Please try again.');
     } finally {
-      setSubmitting(false);
+      // setSubmitting(false);
     }
   };
 

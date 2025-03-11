@@ -410,11 +410,20 @@ def get_listening_section(section_id):
         questions = Question.query.filter_by(listening_audio_id=audio.id).all()
         questions_data = []
         for q in questions:
-            options = Option.query.filter_by(question_id=q.id).all()
-            # options_data = [{'id': o.id, 'option_text': o.option_text} for o in options]
-            # we need to get the table data(rows, columns) and return it
-            options_data = [o.option_text for o in options]
-            questions_data.append({'id': q.id, 'type': q.type, 'prompt': q.prompt, 'options': options_data})
+            if q.type == 'table':
+                table_rows = TableQuestionRow.query.filter_by(question_id=q.id).all()
+                table_columns = TableQuestionColumn.query.filter_by(question_id=q.id).all()
+                rows = [row.row_label for row in table_rows]
+                columns = [col.column_label for col in table_columns]
+                questions_data.append({'id': q.id, 'type': q.type, 'prompt': q.prompt,  'rows': rows, 'columns': columns})
+            else:
+                options = Option.query.filter_by(question_id=q.id).all()
+                options_data = [o.option_text for o in options]
+                if q.type == 'audio':
+                    audio_url = QuestionAudio(question_id=q.id)
+                    questions_data.append({'id': q.id, 'type': q.type, 'audio_url': audio_url.audio_url, 'prompt': q.prompt, 'options': options_data})
+                else:
+                    questions_data.append({'id': q.id, 'type': q.type, 'prompt': q.prompt, 'options': options_data})
         audios_data.append({
             'id': audio.id,
             'title': audio.title,
