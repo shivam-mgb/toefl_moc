@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import ReadingPassageArea from '../components/ReadingPassageArea';
 import MultipleChoiceQuestion from '../components/MultipleChoiceQuestion';
 import ProseSummaryArea from '../components/ProseSummaryArea';
 import InsertTextQuestion from '../components/InsertTextQuestion';
-import { Passage } from '../types/types'; 
+import { Passage } from '../types/types';
 
 interface ReadingQuestionPageProps {
   passage: Passage;
@@ -13,13 +13,6 @@ interface ReadingQuestionPageProps {
 const ReadingQuestionPage: React.FC<ReadingQuestionPageProps> = ({ passage, onPassageComplete }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string[] | undefined>>({});
-
-  console.log('ReadingQuestionPage rendered, currentQuestionIndex:', currentQuestionIndex);
-
-  useEffect(() => {
-    setCurrentQuestionIndex(0);
-    setSelectedAnswers({});
-  }, [passage]);
 
   const handleAnswerSelect = (questionId: string, answer: string[]) => {
     setSelectedAnswers((prevAnswers) => ({
@@ -41,7 +34,6 @@ const ReadingQuestionPage: React.FC<ReadingQuestionPageProps> = ({ passage, onPa
   };
 
   const renderQuestion = () => {
-    console.log('renderQuestion called, currentQuestionIndex:', currentQuestionIndex);
     const currentQuestion = passage.questions[currentQuestionIndex];
     if (!currentQuestion) return null;
 
@@ -54,12 +46,12 @@ const ReadingQuestionPage: React.FC<ReadingQuestionPageProps> = ({ passage, onPa
             totalQuestions={passage.questions.length}
             questionText={currentQuestion.prompt}
             options={currentQuestion.options.map((opt, idx) => ({
-              id: String.fromCharCode(97 + idx), // 'a', 'b', 'c', etc.
+              id: String.fromCharCode(97 + idx),
               text: opt,
             }))}
             selectedAnswer={selectedAnswers[currentQuestion.id!]}
             onAnswerSelect={(answer: string[]) => handleAnswerSelect(currentQuestion.id || `q${currentQuestionIndex}`, answer)}
-            isMultipleChoice={false} // Single answer
+            isMultipleChoice={false}
           />
         );
       case 'multiple_to_multiple':
@@ -75,14 +67,14 @@ const ReadingQuestionPage: React.FC<ReadingQuestionPageProps> = ({ passage, onPa
             }))}
             selectedAnswer={selectedAnswers[currentQuestion.id!]}
             onAnswerSelect={(answer: string[]) => handleAnswerSelect(currentQuestion.id || `q${currentQuestionIndex}`, answer)}
-            isMultipleChoice={true} // Multiple answers
+            isMultipleChoice={true}
           />
         );
       case 'insert_text':
         return (
           <InsertTextQuestion
             questionText={currentQuestion.prompt}
-            passageText={passage.text} // Use passage text with insertion markers
+            passageText={passage.text}
             onAnswerSelect={(answer: string) => handleAnswerSelect(currentQuestion.id || `q${currentQuestionIndex}`, [answer])}
           />
         );
@@ -91,8 +83,6 @@ const ReadingQuestionPage: React.FC<ReadingQuestionPageProps> = ({ passage, onPa
           <ProseSummaryArea
             question={currentQuestion}
             onAnswerSelect={(answer: string[]) => handleAnswerSelect(currentQuestion.id || `q${currentQuestionIndex}`, answer)}
-            // the answers come as an array of indexes of the answers (like ['0', '3', '2'])
-            // you might need it to submit answers
           />
         );
       case 'table':

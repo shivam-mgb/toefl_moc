@@ -36,8 +36,6 @@ const ReadingSectionPage: React.FC = () => {
         // if (data.timeLimit) {
         //   setSectionTimeRemaining(data.timeLimit);
         // }
-        console.log(data);
-        
         setSectionTimeRemaining(100);
         setLoading(false);
       })
@@ -61,11 +59,9 @@ const ReadingSectionPage: React.FC = () => {
       ...prevAnswers, 
       [passageId]: answers 
     }));
-    console.log('Answers for passage', passageId, ':', answers);
     
     if (readingSection && currentPassageIndex < readingSection.passages.length - 1) {
       setCurrentPassageIndex((prev) => prev + 1);
-      console.log('Moved to passage index:', currentPassageIndex + 1);
     } else {
       // Submit all answers when the last passage is completed
       handleSubmitAllAnswers();

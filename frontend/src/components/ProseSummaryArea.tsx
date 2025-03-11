@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ProseSummaryQuestion } from '../types/types';
 
 interface SummaryOption {
@@ -8,7 +8,7 @@ interface SummaryOption {
 
 interface ProseSummaryAreaProps {
   question: ProseSummaryQuestion;
-  onAnswerSelect: ( answer: string[]) => void;
+  onAnswerSelect: (answer: string[]) => void;
 }
 
 const ProseSummaryArea: React.FC<ProseSummaryAreaProps> = ({ question, onAnswerSelect }) => {
@@ -31,42 +31,59 @@ const ProseSummaryArea: React.FC<ProseSummaryAreaProps> = ({ question, onAnswerS
     e.preventDefault();
   };
 
+  // Unified handler for drop and remove actions
+  const updateDropZones = (
+    action: 'drop' | 'remove',
+    dropIndex: number,
+    optionId?: string
+  ) => {
+    if (action === 'drop' && optionId) {
+      if (dropZones[dropIndex] !== null) return; // Drop zone already occupied
+      const option = availableOptions.find((opt) => opt.id === optionId);
+      if (!option) return;
+
+      // Compute new states
+      const newAvailableOptions = availableOptions.filter((opt) => opt.id !== optionId);
+      const newDropZones = [...dropZones];
+      newDropZones[dropIndex] = option;
+
+      // Apply state updates
+      setAvailableOptions(newAvailableOptions);
+      setDropZones(newDropZones);
+
+      // Notify parent after state updates
+      const answers = newDropZones.filter((zone) => zone !== null).map((zone) => zone!.id);
+      queueMicrotask(() => onAnswerSelect(answers)); // Defer to avoid render conflict
+    } else if (action === 'remove') {
+      const option = dropZones[dropIndex];
+      if (!option) return;
+
+      // Compute new states
+      const newDropZones = [...dropZones];
+      newDropZones[dropIndex] = null;
+      const newAvailableOptions = [...availableOptions, option];
+
+      // Apply state updates
+      setDropZones(newDropZones);
+      setAvailableOptions(newAvailableOptions);
+
+      // Notify parent after state updates
+      const answers = newDropZones.filter((zone) => zone !== null).map((zone) => zone!.id);
+      queueMicrotask(() => onAnswerSelect(answers)); // Defer to avoid render conflict
+    }
+  };
+
   // Handle dropping an option into a drop zone
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
     e.preventDefault();
-    if (dropZones[dropIndex] !== null) return; // Drop zone already occupied
-
     const optionId = e.dataTransfer.getData('optionId');
-    const option = availableOptions.find((opt) => opt.id === optionId);
-
-    if (option) {
-      setAvailableOptions((prev) => prev.filter((opt) => opt.id !== optionId));
-      setDropZones((prev) => {
-        const newZones = [...prev];
-        newZones[dropIndex] = option;
-        return newZones;
-      });
-    }
+    updateDropZones('drop', dropIndex, optionId);
   };
 
   // Remove an option from a drop zone
   const handleRemoveFromDropZone = (dropIndex: number) => {
-    const option = dropZones[dropIndex];
-    if (option) {
-      setDropZones((prev) => {
-        const newZones = [...prev];
-        newZones[dropIndex] = null;
-        return newZones;
-      });
-      setAvailableOptions((prev) => [...prev, option]);
-    }
+    updateDropZones('remove', dropIndex);
   };
-
-  // Update parent component with selected answers whenever dropZones change
-  useEffect(() => {
-    const answers = dropZones.filter((zone) => zone !== null).map((zone) => zone!.id);
-    onAnswerSelect(answers);
-  }, [dropZones, question.id, onAnswerSelect]);
 
   return (
     <div className="w-full max-w-4xl mx-auto">

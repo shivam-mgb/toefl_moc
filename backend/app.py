@@ -408,7 +408,13 @@ def get_listening_section(section_id):
     audios_data = []
     for audio in audios:
         questions = Question.query.filter_by(listening_audio_id=audio.id).all()
-        questions_data = [{'id': q.id, 'type': q.type, 'prompt': q.prompt} for q in questions]
+        questions_data = []
+        for q in questions:
+            options = Option.query.filter_by(question_id=q.id).all()
+            # options_data = [{'id': o.id, 'option_text': o.option_text} for o in options]
+            # we need to get the table data(rows, columns) and return it
+            options_data = [o.option_text for o in options]
+            questions_data.append({'id': q.id, 'type': q.type, 'prompt': q.prompt, 'options': options_data})
         audios_data.append({
             'id': audio.id,
             'title': audio.title,
