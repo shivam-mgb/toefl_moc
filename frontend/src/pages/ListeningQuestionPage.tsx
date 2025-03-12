@@ -46,6 +46,12 @@ const ListeningQuestionPage: React.FC<ListeningQuestionPageProps> = ({ audio, cu
     }
   };
 
+  const handleEndAudio = () => {
+    setIsPlaying(false);
+    setShowQuestions(true);
+  };
+
+
   const renderQuestion = () => {
     const currentQuestion: QuestionResponse = audio.questions[currentQuestionIndex];
     if (!currentQuestion) return null;
@@ -119,7 +125,7 @@ const ListeningQuestionPage: React.FC<ListeningQuestionPageProps> = ({ audio, cu
             isPlaying={isPlaying}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
-            onEnded={handleNext}
+            onEnded={handleEndAudio}
           />
         ) : (
           <div>

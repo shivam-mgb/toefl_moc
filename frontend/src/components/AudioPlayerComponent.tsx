@@ -36,9 +36,7 @@ const AudioPlayerComponent: React.FC<AudioPlayerProps> = ({
     };
 
     const handleEnded = () => {
-      if (onEnded) {
-        onEnded(); // Call the onEnded callback
-      }
+      onEnded();
     };
 
     if (audio) {
