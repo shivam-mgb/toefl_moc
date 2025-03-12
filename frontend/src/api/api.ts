@@ -90,6 +90,33 @@ export async function createListeningSection(
   return response.json();
 }
 
+/** Fetch listening section data */
+export async function getListeningSection(sectionId: string): Promise<ListeningSectionResponse> {
+  const response = await fetch(`${BASE_URL}/listening/${sectionId}`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Failed to fetch listening section');
+  }
+  return response.json();
+}
+
+/** Submit user answers */
+export async function submitListeningAnswers(sectionId: string, answers: Record<string, any>) {
+  const response = await fetch(`${BASE_URL}/listening/${sectionId}/submit`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ answers }),
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Failed to submit answers');
+  }
+  return response.json();
+}
+
 export async function createSpeakingSection(
   data: SpeakingSectionRequest,
   task2Audio: File,

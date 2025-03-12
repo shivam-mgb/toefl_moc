@@ -1,4 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
+const apiUrl = process.env.REACT_APP_API_URL as string;
+const audioPath = process.env.REACT_APP_AUDIO_PATH as string;
 
 interface AudioPlayerProps {
   audioSrc: string;
@@ -74,7 +76,7 @@ const AudioPlayerComponent: React.FC<AudioPlayerProps> = ({
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex flex-col space-y-4">
         {/* Audio Element */}
-        <audio ref={audioRef} src={audioSrc} />
+        <audio ref={audioRef} src={apiUrl + audioPath + audioSrc} />
 
         {/* Play/Pause and Volume Controls */}
         <div className="flex items-center space-x-4">

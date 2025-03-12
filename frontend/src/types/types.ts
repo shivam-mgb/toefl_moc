@@ -83,16 +83,71 @@ export interface ListeningSectionRequest {
   }[];
 }
 
+// Question Type Interfaces
+export interface MultipleToSingleQuestionResponse extends BaseQuestion {
+  type: 'multiple_to_single';
+  prompt: string;
+  options: string[];
+  correct_answer: string;
+}
+
+export interface MultipleToMultipleQuestionResponse extends BaseQuestion {
+  type: 'multiple_to_multiple';
+  prompt: string;
+  options: string[];
+  correct_answers: string[];
+}
+
+export interface InsertTextQuestionResponse extends BaseQuestion {
+  type: 'insert_text';
+  prompt: string;
+  correct_answer: string; // e.g., 'a', 'b', 'c', 'd'
+}
+
+export interface ProseSummaryQuestionResponse extends BaseQuestion {
+  type: 'prose_summary';
+  prompt: string;
+  options: string[];
+  correct_answers: string[];
+}
+
+export interface TableQuestionResponse extends BaseQuestion {
+  type: 'table';
+  prompt: string;
+  rows: string[];
+  columns: string[];
+  correct_selections: { row: string; column: string }[];
+}
+
+export interface AudioQuestionResponse extends BaseQuestion {
+  type: 'audio';
+  prompt: string;
+  audio_url: string;
+  options: string[];
+  correct_answer: string;
+}
+
+// Union Type for Questions
+export type QuestionResponse =
+  | MultipleToSingleQuestionResponse
+  | MultipleToMultipleQuestionResponse
+  | InsertTextQuestionResponse
+  | ProseSummaryQuestionResponse
+  | TableQuestionResponse
+  | AudioQuestionResponse;
+
+export interface AudioResponse {
+  id: string;
+  title: string;
+  audio_url: string;
+  photo_url: string | null;
+  questions: QuestionResponse[];
+}
+
 export interface ListeningSectionResponse {
   id: string;
   title: string;
-  audios: {
-    id: string;
-    title: string;
-    audioUrl: string;
-    photoUrl: string | null;
-    questions: Question[];
-  }[];
+  audios: AudioResponse[];
 }
 
 // Speaking Section Interfaces

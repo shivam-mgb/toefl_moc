@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file, abort
 from werkzeug.utils import secure_filename
 import datetime
 import jwt
@@ -21,6 +21,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = os.environ.get('SQLALCHEMY_TRACK_MODIFICATIONS')
 app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+app.config['MAX_CONTENT_LENGTH'] = os.environ.get('MAX_CONTENT_LENGTH')
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = os.environ.get('SEND_FILE_MAX_AGE_DEFAULT')
+
 
 
 # Ensure upload folder and subfolders exist
@@ -246,6 +249,27 @@ def logout():
     """Logout endpoint (client should discard token)."""
     return jsonify({'message': 'Logout successful'}), 200
 
+# Route to serve audio files
+@app.route('/files/<path:filename>')
+def get_file(filename):
+    # Construct full path
+    file_path = os.path.join(os.environ.get('BASE_DIR'), filename)
+    print('here')
+    # Security check: ensure path is within BASE_DIR
+    if not file_path.startswith(os.environ.get('BASE_DIR')):
+        abort(403, description="Access denied")
+    
+    # Check if file exists and is a file (not directory)
+    if not os.path.exists(file_path) or not os.path.isfile(file_path):
+        abort(404, description="File not found")
+    
+    return send_file(
+        file_path,
+        mimetype='audio/mpeg',
+        as_attachment=False
+    )
+
+
 # Readign section
 
 @app.route('/reading', methods=['POST'])
@@ -384,6 +408,7 @@ def create_listening_section():
 
         audio = ListeningAudio(title=audio_title, audio_url=audio_url, photo_url=photo_url, section=section)
         db.session.add(audio)
+        db.session.flush() # to get the id to use in create_question
         
         for indx, question_data in enumerate(audio_data.get('questions', [])):
             question_audio = request.files.get(f'questionSnippetFiles[{i}][{indx}]')

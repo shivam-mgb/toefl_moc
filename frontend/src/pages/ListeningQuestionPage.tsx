@@ -1,221 +1,157 @@
 import React, { useState, useEffect } from 'react';
-import TopMenu from '../components/TopMenu';
-import Navigation from '../components/Navigation';
 import AudioPlayerComponent from '../components/AudioPlayerComponent';
-import StaticImageArea from '../components/StaticImageArea';
-import TableCompletionQuestion from '../components/TableCompletionQuestion';
 import MultipleChoiceQuestion from '../components/MultipleChoiceQuestion';
-import { TrackConfig, Question, TableCompletionQuestion as TableCompletionQuestionType, QuestionType } from '../types/listening';
+import TableCompletionQuestion from '../components/TableCompletionQuestion';
+import { AudioResponse, QuestionResponse } from '../types/types';
 
 interface ListeningQuestionPageProps {
-    trackType: 'conversation' | 'lecture';
-    trackConfig: TrackConfig;
-    sectionProgress: string;
-    sectionTimer: string;
-    onTrackComplete: () => void;
+  audio: AudioResponse;
+  currentAudioIndex: number;
+  onAudioComplete: (audioId: string, answers: any) => void;
 }
 
-const ListeningQuestionPage: React.FC<ListeningQuestionPageProps> = ({
-    trackType,
-    trackConfig,
-    sectionProgress,
-    sectionTimer,
-    onTrackComplete,
-}) => {
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [audioCompleted, setAudioCompleted] = useState(false);
-    const [showQuestions, setShowQuestions] = useState(false);
-    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [selectedAnswers, setSelectedAnswers] = useState<Record<string, any>>(
-        {}
-    );
+const ListeningQuestionPage: React.FC<ListeningQuestionPageProps> = ({ audio, currentAudioIndex, onAudioComplete }) => {
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, any>>({});
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showQuestions, setShowQuestions] = useState(false); 
+  
 
-    useEffect(() => {
-        if (trackConfig) {
-            setIsPlaying(true);
-            setAudioCompleted(false);
-            setShowQuestions(false);
-            const timer = setTimeout(() => {
-                setAudioCompleted(true);
-                setIsPlaying(false);
-                setShowQuestions(true);
-            }, trackConfig.audioLength * 1000);
+  // Simulate audio playback (replace with actual audio logic)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsPlaying(false);
+      setShowQuestions(true);
+    }, 180000); // 3 minutes for audio
+    return () => clearTimeout(timer);
+  }, []);
 
-            return () => clearTimeout(timer);
-        }
-    }, [trackConfig]);
+  // Handle answer selection
+  const onAnswerSelect = (questionId: string, answer: any) => {
+    setSelectedAnswers((prevAnswers) => ({
+      ...prevAnswers,
+      [questionId]: answer,
+    }));
+  };
 
-    useEffect(() => {
-        setCurrentQuestionIndex(0);
-        setSelectedAnswers({});
-    }, [trackConfig]);
-
-    const handlePlay = () => {
-        setIsPlaying(true);
-    };
-
-    const handlePause = () => {
-        setIsPlaying(false);
-    };
-
-    const submitAnswers = () => {
-        console.log('Submitting answers:', selectedAnswers);
-    };
-
-    const handleNext = () => {
-        if (!showQuestions) {
-            setShowQuestions(true);
-            return;
-        }
-
-        if (currentQuestionIndex < trackConfig.questions.length - 1) {
-            setCurrentQuestionIndex(prev => prev + 1);
-        } else {
-            submitAnswers();
-            onTrackComplete();
-        }
-    };
-
-    const handleTableAnswerChange = (questionId: string, rowIndex: number, colIndex: number, value: string | boolean) => {
-        setSelectedAnswers(prev => {
-            const currentQuestion = trackConfig.questions[currentQuestionIndex];
-            const currentQuestionId = currentQuestion.id;
-
-            const currentAnswers = (prev[currentQuestionId] || []) as (string | boolean)[][];
-            const updatedAnswers = currentAnswers.map(row => [...row]);
-
-            if (!updatedAnswers[rowIndex]) {
-                updatedAnswers[rowIndex] = [];
-            }
-
-            updatedAnswers[rowIndex][colIndex] = value;
-
-            return {
-                ...prev,
-                [currentQuestionId]: updatedAnswers
-            };
-        });
-    };
-
-    const handleMultipleChoiceAnswerChange = (questionId: string, answerId: string) => {
-        setSelectedAnswers(prev => {
-            const question = trackConfig.questions.find(q => q.id === questionId);
-            const isMultipleChoice = question?.type === 'multiple-choice-multiple-answer';
-
-            if (isMultipleChoice) {
-                const selectedAnswersArray = (prev[questionId] || []) as string[];
-                if (selectedAnswersArray.includes(answerId)) {
-                    return {
-                        ...prev,
-                        [questionId]: selectedAnswersArray.filter(id => id !== answerId)
-                    };
-                } else {
-                    return {
-                        ...prev,
-                        [questionId]: [...selectedAnswersArray, answerId]
-                    };
-                }
-            } else {
-                return {
-                    ...prev,
-                    [questionId]: answerId
-                };
-            }
-        });
-    };
-
-    const renderQuestionComponent = (question: Question | TableCompletionQuestionType) => {
-        switch (question.type) {
-            case 'table-completion':
-                const tableQuestion = question as TableCompletionQuestionType;
-                const questionId = tableQuestion.id;
-                return (
-                    <TableCompletionQuestion
-                        questionText={tableQuestion.text}
-                        columnHeaders={tableQuestion.columnHeaders}
-                        rowHeaders={tableQuestion.rowHeaders}
-                        answers={(selectedAnswers[questionId] || [[]]) as boolean[][]}
-                        onAnswerChange={(rowIndex, colIndex, value) => handleTableAnswerChange(questionId, rowIndex, colIndex, value)}
-                    />
-                );
-            case 'single-choice':
-            case 'multiple-choice-multiple-answer':
-                return (
-                    <MultipleChoiceQuestion
-                        questionText={question.text}
-                        options={question.options}
-                        selectedAnswer={selectedAnswers[question.id] || []}
-                        onAnswerChange={(answerId) => handleMultipleChoiceAnswerChange(question.id, answerId)}
-                        isMultipleChoice={question.type === 'multiple-choice-multiple-answer'}
-                    />
-                );
-            default:
-                return <div>Unsupported Question Type</div>;
-        }
-    };
-
-    const currentQuestion = trackConfig.questions[currentQuestionIndex];
-
-    if (!currentQuestion) {
-        return null;
+  const handleNext = () => {
+    if (currentQuestionIndex < audio.questions.length - 1) {
+      setCurrentQuestionIndex((prev) => prev + 1);
     }
+  };
 
+  const handlePrevious = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex((prev) => prev - 1);
+    }
+  };
+
+  const renderQuestion = () => {
+    const currentQuestion: QuestionResponse = audio.questions[currentQuestionIndex];
+    if (!currentQuestion) return null;
+
+    switch (currentQuestion.type) {
+      case 'multiple_to_single':
+        return (
+          <MultipleChoiceQuestion
+            key={currentQuestion.id}
+            questionNumber={currentQuestionIndex + 1}
+            totalQuestions={audio.questions.length}
+            questionText={currentQuestion.prompt}
+            options={currentQuestion.options.map((opt, idx) => ({
+              id: String.fromCharCode(97 + idx),
+              text: opt,
+            }))}
+            selectedAnswer={selectedAnswers[currentQuestion.id!]}
+            onAnswerSelect={(answer: string[]) => onAnswerSelect(currentQuestion.id || `q${currentQuestionIndex}`, answer)}
+            isMultipleChoice={false}
+          />
+        );
+      case 'multiple_to_multiple':
+        return (
+          <MultipleChoiceQuestion
+            key={currentQuestion.id}
+            questionNumber={currentQuestionIndex + 1}
+            totalQuestions={audio.questions.length}
+            questionText={currentQuestion.prompt}
+            options={currentQuestion.options.map((opt, idx) => ({
+              id: String.fromCharCode(97 + idx),
+              text: opt,
+            }))}
+            selectedAnswer={selectedAnswers[currentQuestion.id!]}
+            onAnswerSelect={(answer: string[]) => onAnswerSelect(currentQuestion.id || `q${currentQuestionIndex}`, answer)}
+            isMultipleChoice={true}
+          />
+        );
+      case 'table':
+        return (
+          <TableCompletionQuestion
+            questionText={currentQuestion.prompt}
+            columnHeaders={currentQuestion.columns || []}
+            rowHeaders={currentQuestion.rows || []}
+            answers={selectedAnswers[currentQuestion.id!] || []}
+            onAnswerChange={(rowIndex, colIndex, value) =>
+              onAnswerSelect(currentQuestion.id || `q${currentQuestionIndex}`, {
+                ...selectedAnswers[currentQuestion.id!],
+                [rowIndex]: { ...selectedAnswers[currentQuestion.id!]?.[rowIndex], [colIndex]: value },
+              })
+            }
+          />
+        );
+      default:
+        return <p>Unsupported question type: {currentQuestion.type}</p>;
+    }
+  };
+
+  const areAllQuestionsAnswered = audio.questions.every((q) => {
+    const answer = selectedAnswers[q.id || `q${audio.questions.indexOf(q)}`];
+    return answer !== undefined && (Array.isArray(answer) ? answer.length > 0 : true);
+  });
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
-      <TopMenu
-        sectionTitle="Listening Section"
-        questionProgress={sectionProgress}
-        timer={sectionTimer}
-      />
-
       <main className="flex-grow container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto space-y-8">
-          {!showQuestions ? (
-            <>
-              {trackConfig.audioSrc && (
-                <AudioPlayerComponent
-                  key={trackConfig.id}
-                  audioSrc={trackConfig.audioSrc}
-                  onPlay={handlePlay}
-                  onPause={handlePause}
-                  isPlaying={isPlaying}
-                />
-              )}
-
-              {trackConfig.imageUrl && (
-                <StaticImageArea imageUrl={trackConfig.imageUrl} />
-              )}
-
-              <div className="text-center">
-                <p
-                  className={`text-lg ${
-                    isPlaying ? 'text-teal-600 font-semibold' : 'text-gray-500'
-                  }`}
+        <h1>{audio.title}</h1>
+        <h2>{audio.audio_url}</h2>
+        {!showQuestions ? (
+          <AudioPlayerComponent
+            audioSrc={audio.audio_url}
+            isPlaying={isPlaying}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            onEnded={handleNext}
+          />
+        ) : (
+          <div>
+            {renderQuestion()}
+            <div className="mt-4 flex justify-between">
+              <button
+                onClick={handlePrevious}
+                disabled={currentQuestionIndex === 0}
+                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2"
+              >
+                Previous
+              </button>
+              {areAllQuestionsAnswered ? (
+                <button
+                  onClick={() => onAudioComplete(audio.id || `a${currentAudioIndex}`, selectedAnswers)}
+                  className="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded"
                 >
-                  {isPlaying
-                    ? `${
-                        trackType === 'conversation' ? 'Conversation' : 'Lecture'
-                      } is playing. Listen carefully.`
-                    : `Click Play to start ${
-                        trackType === 'conversation' ? 'Conversation' : 'Lecture'
-                      }.`}
-                </p>
-              </div>
-            </>
-          ) : (
-            <div className="space-y-8">
-              {renderQuestionComponent(currentQuestion)}
+                  Submit
+                </button>
+              ) : (
+                <button
+                  onClick={handleNext}
+                  disabled={currentQuestionIndex === audio.questions.length - 1}
+                  className="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded"
+                >
+                  Next
+                </button>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </main>
-
-      <div className="border-t border-gray-200 bg-white">
-        <div className="container mx-auto px-4">
-          <Navigation onNext={handleNext} />
-        </div>
-      </div>
     </div>
   );
 };

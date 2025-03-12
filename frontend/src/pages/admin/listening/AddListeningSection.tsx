@@ -1,7 +1,7 @@
 // src/components/admin/AddListeningSection.tsx
 import { useReducer } from 'react';
 import { createListeningSection } from '../../../api/api';
-import MultipleToSingleInput from '../../../components/admin/MultipleToMultipleInput';
+import MultipleToSingleInput from '../../../components/admin/MultipleToSingleInput';
 import MultipleToMultipleInput from '../../../components/admin/MultipleToMultipleInput';
 import TableQuestionInput from '../../../components/admin/TableQuestionInput';
 import AudioQuestionInput from '../../../components/admin/AudioQuestionInput';

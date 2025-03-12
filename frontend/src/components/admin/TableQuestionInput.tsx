@@ -63,7 +63,7 @@ const TableQuestionInput: React.FC<TableQuestionInputProps> = ({ onChange }) => 
         value={prompt}
         onChange={(e) => {
           setPrompt(e.target.value);
-          handleChange(prompt, rows, columns, correctSelections);
+          handleChange(e.target.value, rows, columns, correctSelections);
         }}
         placeholder="Enter question prompt"
         className="w-full p-2 border rounded-md mb-4"
