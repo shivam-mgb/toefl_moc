@@ -21,8 +21,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = os.environ.get('SQLALCHEMY_TRACK_MODIFICATIONS')
 app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
-app.config['MAX_CONTENT_LENGTH'] = os.environ.get('MAX_CONTENT_LENGTH')
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = os.environ.get('SEND_FILE_MAX_AGE_DEFAULT')
+# too early to include these (deal with the error it brings)
+# app.config['MAX_CONTENT_LENGTH'] = os.environ.get('MAX_CONTENT_LENGTH')
+# app.config['SEND_FILE_MAX_AGE_DEFAULT'] = os.environ.get('SEND_FILE_MAX_AGE_DEFAULT')
 
 
 
