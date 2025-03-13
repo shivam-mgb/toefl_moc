@@ -18,6 +18,9 @@ const ListeningSectionPage: React.FC = () => {
   const [sectionTimeRemaining, setSectionTimeRemaining] = useState(600); // 10 minutes in seconds
   const [audioAnswers, setAudioAnswers] = useState<Record<string, any>>({});
   const [submissionResult, setSubmissionResult] = useState<any>(null);
+  
+  // A key to force remount of the ListeningQuestionPage component
+  const [questionPageKey, setQuestionPageKey] = useState(0);
 
   // Fetch listening section data
   useEffect(() => {
@@ -58,7 +61,9 @@ const ListeningSectionPage: React.FC = () => {
     }));
 
     if (listeningSection && currentAudioIndex < listeningSection.audios.length - 1) {
+      // Move to next audio and force remount of the question page component
       setCurrentAudioIndex((prev) => prev + 1);
+      setQuestionPageKey(prev => prev + 1); // Increment key to force remount
     } else {
       handleSubmitAllAnswers();
     }
@@ -158,7 +163,12 @@ const ListeningSectionPage: React.FC = () => {
         timer={formatTime(sectionTimeRemaining)}
       />
       <main className="flex-grow container mx-auto px-4 py-8">
-        <ListeningQuestionPage audio={currentAudio} currentAudioIndex={currentAudioIndex} onAudioComplete={handleAudioComplete} />
+        <ListeningQuestionPage 
+          key={questionPageKey} // Add key to force remount when it changes
+          audio={currentAudio} 
+          currentAudioIndex={currentAudioIndex} 
+          onAudioComplete={handleAudioComplete} 
+        />
       </main>
     </div>
   );

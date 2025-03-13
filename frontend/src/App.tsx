@@ -40,7 +40,7 @@ const App: React.FC = () => {
           <Route path='/login' element={<Login />} />
 
           <Route path='/reading-intro' element={<ReadingSectionIntroPage />} />
-          <Route path='/listening-intro' element={<ListeningSectionIntroPage />} />
+          <Route path='/listening-intro/:testId' element={<ListeningSectionIntroPage />} />
           <Route path='/speaking-intro' element={<SpeakingSectionIntroPage />} />
           <Route path='/writing-intro' element={<WritingSectionIntroPage />} />
           <Route path="/reading/:testId" element={<ReadingSectionPage />} />

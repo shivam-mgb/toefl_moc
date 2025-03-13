@@ -99,25 +99,22 @@ def create_question(question_data, section_type, reading_passage_id=None, listen
     if question.type in ['multiple_to_multiple', 'insert_text', 'multiple_to_single', 'audio', 'prose_summary']:
         if question.type == 'audio' and audio_file:
             # Save the audio file
-            filename = secure_filename(audio_file.filename)
-            audio_path = os.path.join(app.config['UPLOAD_FOLDER'], 'question_audios', filename)
-            audio_file.save(audio_path)
-            print(f"Audio saved to: {audio_path}")
+            audio_url = save_file(audio_file, 'question_audios')
 
             # Create QuestionAudio record
             question_audio = QuestionAudio(
                 question_id=question.id,
-                audio_url=audio_path  # Or use a URL if hosted elsewhere
+                audio_url=audio_url
             )
             db.session.add(question_audio)
         
-        if question.type == 'insert_text':
+        elif question.type == 'insert_text':
             options = ['a','b','c','d']
         else:
             options = question_data['options']
 
         if question.type in ['insert_text', 'multiple_to_single', 'audio']:
-            corrects = question_data['correct_answer']
+            corrects = question_data['correct_answer'] # single correct answer (with no s)
         else:
             corrects = question_data['correct_answers']
 
@@ -255,7 +252,6 @@ def logout():
 def get_file(filename):
     # Construct full path
     file_path = os.path.join(os.environ.get('BASE_DIR'), filename)
-    print('here')
     # Security check: ensure path is within BASE_DIR
     if not file_path.startswith(os.environ.get('BASE_DIR')):
         abort(403, description="Access denied")
@@ -446,7 +442,7 @@ def get_listening_section(section_id):
                 options = Option.query.filter_by(question_id=q.id).all()
                 options_data = [o.option_text for o in options]
                 if q.type == 'audio':
-                    audio_url = QuestionAudio(question_id=q.id)
+                    audio_url = QuestionAudio.query.filter_by(question_id=q.id).first()
                     questions_data.append({'id': q.id, 'type': q.type, 'audio_url': audio_url.audio_url, 'prompt': q.prompt, 'options': options_data})
                 else:
                     questions_data.append({'id': q.id, 'type': q.type, 'prompt': q.prompt, 'options': options_data})

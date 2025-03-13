@@ -13,13 +13,6 @@ import ReadingQuestionsList from '../pages/admin/reading/ReadingQuestionsList';
 import AddReadingQuestion from '../pages/admin/reading/AddReadingQuestion';
 import EditReadingQuestion from '../pages/admin/reading/EditReadingQuestion';
 
-// Listening Section
-import ListeningAudioList from '../pages/admin/listening/ListeningAudioList';
-import AddListeningAudio from '../pages/admin/listening/AddListeningAudio';
-import ListeningAudioDetail from '../pages/admin/listening/ListeningAudioDetail';
-import ListeningQuestionsList from '../pages/admin/listening/ListeningQuestionsList';
-import AddListeningQuestion from '../pages/admin/listening/AddListeningQuestion';
-import EditListeningQuestion from '../pages/admin/listening/EditListeningQuestion';
 
 // Speaking Pages
 import SpeakingTasksOverview from '../pages/admin/speaking/SpeakingTasksOverview';
@@ -65,15 +58,6 @@ const AdminRoutes: React.FC = () => {
       <Route path="/reading/questions" element={<ReadingQuestionsList />} />
       <Route path="/reading/questions/add" element={<AddReadingQuestion />} />
       <Route path="/reading/questions/:id/edit" element={<EditReadingQuestion />} />
-
-      {/* Listening Section */}
-      <Route path="/listening" element={<Navigate to="/admin/listening/audio" replace />} />
-      <Route path="/listening/audio" element={<ListeningAudioList />} />
-      <Route path="/listening/audio/add" element={<AddListeningAudio />} />
-      <Route path="/listening/audio/:id" element={<ListeningAudioDetail />} />
-      <Route path="/listening/questions" element={<ListeningQuestionsList />} />
-      <Route path="/listening/questions/add" element={<AddListeningQuestion />} />
-      <Route path="/listening/questions/:id/edit" element={<EditListeningQuestion />} />
 
       {/* Speaking Section */}
       <Route path="/speaking" element={<Navigate to="/admin/speaking/overview" replace />} />

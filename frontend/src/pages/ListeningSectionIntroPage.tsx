@@ -1,12 +1,13 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import TopMenu from '../components/TopMenu';
 
 const ListeningSectionIntroPage: React.FC = () => {
+  const { testId } = useParams<{ testId: string }>();
   const navigate = useNavigate();
 
   const handleStartTest = () => {
-    navigate('/listening');
+    navigate(`/listening/${testId}`);
   };
 
   return (

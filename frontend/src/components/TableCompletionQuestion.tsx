@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 interface TableCompletionQuestionProps {
     questionText: string;
     columnHeaders: string[];
     rowHeaders: string[];
-    answers: boolean[][];
+    answers: Record<number, Record<number, boolean>> | any[] | undefined;
     onAnswerChange: (rowIndex: number, colIndex: number, value: boolean) => void;
 }
 
@@ -12,12 +12,22 @@ const TableCompletionQuestion: React.FC<TableCompletionQuestionProps> = ({
     questionText,
     columnHeaders: initialColumnHeaders,
     rowHeaders: initialRowHeaders,
-    answers,
+    answers = {}, // Default to empty object if undefined
     onAnswerChange,
 }) => {
     const columnHeaders = initialColumnHeaders.slice(0, 3);
     const rowHeaders = initialRowHeaders.slice(0, 3);
 
+    // Helper function to safely check if a checkbox is checked
+    const isChecked = (rowIndex: number, colIndex: number): boolean => {
+        if (!answers) return false;
+        
+        if (Array.isArray(answers)) {
+            return answers[rowIndex] && answers[rowIndex][colIndex] === true;
+        }
+        
+        return Boolean(answers[rowIndex]?.[colIndex]);
+    };
 
     return (
         <div className="bg-white shadow-md rounded-lg p-6">
@@ -41,14 +51,13 @@ const TableCompletionQuestion: React.FC<TableCompletionQuestionProps> = ({
                         {rowHeaders.map((rowHeader, rowIndex) => (
                             <tr key={rowIndex} className="bg-white">
                                 <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
-                                    {/* Display rowHeader as static text */}
                                     {rowHeader}
-                                 </td>
+                                </td>
                                 {columnHeaders.map((_, colIndex) => (
                                     <td key={colIndex} className="px-6 py-4 whitespace-nowrap">
                                         <input
                                             type="checkbox"
-                                            checked={answers[rowIndex] ? answers[rowIndex][colIndex] : false}
+                                            checked={isChecked(rowIndex, colIndex)}
                                             onChange={(e) => onAnswerChange(rowIndex, colIndex, e.target.checked)}
                                             className="form-checkbox h-5 w-5 text-teal-600"
                                         />
