@@ -4,98 +4,103 @@ interface MediaRecorderComponentProps {
     recordingTime: number;
     onRecordingComplete: (audioUrl: string) => void;
     startRecording: boolean;
+    onRecordingCapture: (recordingBlob: Blob) => void;
 }
 
-const MediaRecorderComponent: React.FC<MediaRecorderComponentProps> = ({ recordingTime, onRecordingComplete, startRecording }) => {
+const MediaRecorderComponent: React.FC<MediaRecorderComponentProps> = ({
+    recordingTime,
+    onRecordingComplete,
+    startRecording,
+    onRecordingCapture
+}) => {
     const [isRecording, setIsRecording] = useState(false);
-    const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
     const [audioUrl, setAudioUrl] = useState<string | null>(null);
-    const audioChunks = useRef<Blob[]>([]); // useRef to hold audio chunks across renders
-    const recorderRef = useRef<MediaRecorder | null>(null); // useRef to hold recorder for timer access
-    const isInitialized = useRef(false); // To ensure initialization runs only once
-    let timer: any = useRef<ReturnType<typeof setTimeout> | null>(null).current; // Use useRef for timer
+    const [isInitialized, setIsInitialized] = useState(false); // Track initialization
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const audioChunksRef = useRef<Blob[]>([]);
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
-        let recorder: MediaRecorder | null = null;
-
         const initializeMediaRecorder = async () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                recorder = new MediaRecorder(stream);
-                setMediaRecorder(recorder);
-                recorderRef.current = recorder; // Store in ref for timer access
-                audioChunks.current = []; // Initialize audioChunks array for each recording session
+                const recorder = new MediaRecorder(stream);
+                mediaRecorderRef.current = recorder;
+                audioChunksRef.current = [];
 
                 recorder.ondataavailable = (event) => {
                     if (event.data.size > 0) {
-                        audioChunks.current.push(event.data);
+                        audioChunksRef.current.push(event.data);
                     }
                 };
 
                 recorder.onstop = () => {
-                    console.log("recorder.onstop event triggered"); // Debug log
+                    console.log("recorder.onstop event triggered");
                     setIsRecording(false);
-                    const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
+                    const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
                     const url = URL.createObjectURL(audioBlob);
                     setAudioUrl(url);
                     onRecordingComplete(url);
-                    stream.getTracks().forEach(track => track.stop()); // Stop stream here as well for cleanup
+                    onRecordingCapture(audioBlob);
+                    stream.getTracks().forEach(track => track.stop());
                 };
 
                 recorder.onstart = () => {
-                    console.log("recorder.onstart event triggered"); // Debug log
+                    console.log("recorder.onstart event triggered");
                     setIsRecording(true);
-                    timer = setTimeout(() => {
-                        console.log("Timeout in onstart triggered - stopping recorder"); // Debug log
-                        if (recorder && recorder.state === 'recording') {
+                    if (timerRef.current) {
+                        clearTimeout(timerRef.current);
+                    }
+                    timerRef.current = setTimeout(() => {
+                        console.log("Timeout triggered - stopping recorder");
+                        if (recorder.state === 'recording') {
                             recorder.stop();
-                            console.log("recorder.stop() called programmatically by timer"); // Debug log
-                        } else {
-                            console.log("Recorder not in 'recording' state or recorder is null when timer expired.");
+                            console.log("recorder.stop() called programmatically by timer");
                         }
                     }, recordingTime * 1000);
                 };
 
                 console.log("MediaRecorder initialized");
-
+                setIsInitialized(true); // Mark as initialized
             } catch (error) {
                 console.error("Error accessing microphone:", error);
-                // Handle error appropriately, maybe set an error state and display a message
+                setIsInitialized(false); // Handle error case
             }
         };
 
-        if (!isInitialized.current) {
-            initializeMediaRecorder();
-            isInitialized.current = true;
-        }
+        initializeMediaRecorder();
 
         return () => {
-            if (recorder) {
-                recorder.stream?.getTracks().forEach(track => track.stop());
+            if (mediaRecorderRef.current) {
+                if (mediaRecorderRef.current.state === 'recording') {
+                    mediaRecorderRef.current.stop();
+                }
+                mediaRecorderRef.current.stream?.getTracks().forEach(track => track.stop());
             }
-            if (timer) { // Clear timer only if it's set (to avoid potential issues on unmount)
-                clearTimeout(timer);
-                timer = null; // Reset timer ref
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
+                timerRef.current = null;
             }
         };
-    }, [recordingTime, onRecordingComplete]); // Removed startRecording from dependency array
-
+    }, [recordingTime, onRecordingComplete]); // Keep dependencies
 
     useEffect(() => {
-        if (startRecording && mediaRecorder && !isRecording && mediaRecorder.state !== 'recording') {
-            console.log("Start recording triggered by startRecording prop"); // Debug log
-            mediaRecorder.start();
-        } else if (!startRecording && isRecording && mediaRecorder && mediaRecorder.state === 'recording') {
-            console.log("Stop recording triggered by !startRecording prop"); // Debug log
-            mediaRecorder.stop();
+        const recorder = mediaRecorderRef.current;
+        if (startRecording && recorder && !isRecording && recorder.state !== 'recording' && isInitialized) {
+            console.log("Start recording triggered by startRecording prop");
+            recorder.start();
+        } else if (!startRecording && isRecording && recorder && recorder.state === 'recording') {
+            console.log("Stop recording triggered by !startRecording prop");
+            recorder.stop();
+        } else if (startRecording && !isInitialized) {
+            console.log("Waiting for MediaRecorder to initialize...");
         }
-    }, [startRecording, mediaRecorder, isRecording]);
-
+    }, [startRecording, isRecording, isInitialized]);
 
     return (
         <div>
             {isRecording ? (
-                <p className='text-blue-600'>Recording in progress...</p>
+                <p className="text-blue-600">Recording in progress...</p>
             ) : audioUrl ? (
                 <audio src={audioUrl} controls />
             ) : (

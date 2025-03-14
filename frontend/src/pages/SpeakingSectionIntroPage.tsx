@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import TopMenu from '../components/TopMenu';
 
 
 const SpeakingSectionIntroPage: React.FC = () => {
+  const { testId } = useParams<{ testId: string }>();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,7 +21,7 @@ const SpeakingSectionIntroPage: React.FC = () => {
   }, []);
 
   const handleStartTest = () => {
-    navigate('/speaking');
+    navigate(`/speaking/${testId}`);
   };
 
   return (

@@ -1,11 +1,11 @@
 export interface TaskConfig {
   id: string;
-  type: 1 | 2 | 3 | 4 ;
+  type: number ;
   title: string;
   prepTime: number;  // in seconds
     responseTime: number;
     prompt: string;
-    promptAudio: string;
+    promptAudio: string | null;
     readingPassage?: string;
     audioUrl?: string;
     readingTime?: number;

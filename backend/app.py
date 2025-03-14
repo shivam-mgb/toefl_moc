@@ -576,7 +576,10 @@ def get_speaking_section(section_id):
     return jsonify({
         'id': section.id,
         'title': section.title,
-        'tasks': tasks_data
+        'task1': tasks_data[0],
+        'task2': tasks_data[1],
+        'task3': tasks_data[2],
+        'task4': tasks_data[3]
     }), 200
 
 @app.route('/speaking/<int:section_id>', methods=['PUT'])

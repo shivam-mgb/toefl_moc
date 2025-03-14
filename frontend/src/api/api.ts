@@ -147,6 +147,57 @@ export async function createSpeakingSection(
   return response.json();
 }
 
+/**
+ * Get speaking section data by test ID
+ */
+export async function getSpeakingSection(testId: string): Promise<SpeakingSectionResponse> {
+  const response = await fetch(`${BASE_URL}/speaking/${testId}`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Failed to fetch speaking section');
+  }
+  
+  return response.json();
+}
+
+/**
+ * Submit user recordings for the speaking section
+ */
+export async function submitSpeakingAnswers(
+  testId: string, 
+  recordings: {
+    task1Recording: File,
+    task2Recording: File,
+    task3Recording: File,
+    task4Recording: File
+  }
+) {
+  const formData = new FormData();
+  
+  // Append all recording files
+  formData.append('task1Recording', recordings.task1Recording);
+  formData.append('task2Recording', recordings.task2Recording);
+  formData.append('task3Recording', recordings.task3Recording);
+  formData.append('task4Recording', recordings.task4Recording);
+  
+  const response = await fetch(`${BASE_URL}/speaking/${testId}/submit`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: formData,
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Failed to submit speaking answers');
+  }
+  
+  return response.json();
+}
+
 export async function createWritingSection(
   data: WritingSectionRequest,
   task1Audio: File
@@ -168,6 +219,53 @@ export async function createWritingSection(
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.message || `Failed to create writing section: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+// Get writing section data by test ID
+export async function getWritingSection(testId: string): Promise<WritingSectionResponse> {
+  const response = await fetch(`${BASE_URL}/writing/${testId}`, {
+    method: 'GET',
+    headers: {
+      ...getAuthHeaders(),
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Failed to get writing section: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+// Interface for the writing section submission
+interface WritingSubmissionResponse {
+  success: boolean;
+  score?: number;
+  feedback?: string;
+}
+
+// Submit answers for the writing section
+export async function submitWritingAnswers(
+  testId: string,
+  answers: { task1: string; task2: string }
+): Promise<WritingSubmissionResponse> {
+  const response = await fetch(`${BASE_URL}/writing/${testId}/submit`, {
+    method: 'POST',
+    headers: {
+      ...getAuthHeaders(),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ answers }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Failed to submit writing answers: ${response.statusText}`);
   }
 
   return response.json();
