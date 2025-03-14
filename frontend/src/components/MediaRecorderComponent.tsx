@@ -2,13 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 
 interface MediaRecorderComponentProps {
   recordingTime: number;
-  taskId: string;
   onRecordingCapture: (recordingBlob: Blob) => void;
 }
 
 const MediaRecorderComponent: React.FC<MediaRecorderComponentProps> = ({
   recordingTime,
-  taskId,
   onRecordingCapture
 }) => {
   const [isRecording, setIsRecording] = useState(false);
@@ -60,8 +58,10 @@ const MediaRecorderComponent: React.FC<MediaRecorderComponentProps> = ({
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const url = URL.createObjectURL(audioBlob);
         setAudioUrl(url);
-        onRecordingCapture(audioBlob);
+        console.log('setting audio url and returning blob');
         
+        onRecordingCapture(audioBlob);
+        console.log('now you should have the blob');
         // Stop the countdown timer
         if (intervalRef.current) {
           clearInterval(intervalRef.current);

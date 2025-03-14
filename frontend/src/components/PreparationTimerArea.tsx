@@ -3,9 +3,10 @@ import TimerComponent from './TimerComponent';
 
 interface PreparationTimerAreaProps {
   timeRemaining: number;
+  onTimeComplete: () => void;
 }
 
-const PreparationTimerArea: React.FC<PreparationTimerAreaProps> = ({ timeRemaining }) => {
+const PreparationTimerArea: React.FC<PreparationTimerAreaProps> = ({ timeRemaining, onTimeComplete }) => {
   const [remaining, setRemaining] = useState(timeRemaining);
 
   useEffect(() => {
@@ -15,9 +16,10 @@ const PreparationTimerArea: React.FC<PreparationTimerAreaProps> = ({ timeRemaini
       const timer = setTimeout(() => {
         setRemaining(prev => prev - 1);
       }, 1000);
-
       return () => clearTimeout(timer);
     }
+
+    onTimeComplete();
   }, [remaining, timeRemaining]);
 
   return (

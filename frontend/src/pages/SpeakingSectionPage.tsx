@@ -5,11 +5,11 @@ import SpeakingTaskPage from './SpeakingTaskPage';
 import { SpeakingSectionResponse } from '../types/types';
 import { getSpeakingSection, submitSpeakingAnswers } from '../api/api';
 
-const SpeakingSectionPage: React.FC = () => {
-  const { testId } = useParams<{ testId: string }>();
+const SpeakingSectionPage = () => {
+  const { testId } = useParams();
   const navigate = useNavigate();
 
-  // Page state
+  // Core states
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [speakingSection, setSpeakingSection] = useState<SpeakingSectionResponse | null>(null);
@@ -23,7 +23,7 @@ const SpeakingSectionPage: React.FC = () => {
   const [currentPhase, setCurrentPhase] = useState<'intro' | 'reading' | 'audio' | 'prompt' | 'preparation' | 'recording' | 'review'>('intro');
   const [phaseTimeRemaining, setPhaseTimeRemaining] = useState(0);
   
-  // Define task-specific props
+  // Task configurations
   const taskProps = [
     {
       taskType: 1,
@@ -59,7 +59,7 @@ const SpeakingSectionPage: React.FC = () => {
     },
   ];
 
-  // Fetch the speaking section data
+  // Fetch data on load
   useEffect(() => {
     if (!testId) {
       setError('No test ID provided');
@@ -67,22 +67,19 @@ const SpeakingSectionPage: React.FC = () => {
       return;
     }
 
-    setLoading(true);
     getSpeakingSection(testId)
       .then((data) => {
         setSpeakingSection(data);
         setLoading(false);
-        // Initialize the first task
         resetTaskFlow(0);
       })
       .catch((err) => {
-        console.error('Error fetching speaking section:', err);
-        setError('Failed to load speaking section. Please try again.');
+        setError('Failed to load speaking section:'+err);
         setLoading(false);
       });
   }, [testId]);
 
-  // Global section timer
+  // Section timer
   useEffect(() => {
     if (sectionComplete || sectionTimeRemaining <= 0) {
       if (sectionTimeRemaining <= 0 && !sectionComplete) {
@@ -92,23 +89,22 @@ const SpeakingSectionPage: React.FC = () => {
     }
 
     const timer = setInterval(() => {
-      setSectionTimeRemaining((prevTime) => (prevTime <= 1 ? 0 : prevTime - 1));
+      setSectionTimeRemaining((prev) => Math.max(0, prev - 1));
     }, 1000);
 
     return () => clearInterval(timer);
   }, [sectionComplete, sectionTimeRemaining]);
 
-  // Phase timer effect
+  // Phase timer
   useEffect(() => {
     if (phaseTimeRemaining <= 0 || currentPhase === 'audio' || currentPhase === 'review') {
-      return; // Don't run timer for audio (handled by audio component) or review phase
+      return;
     }
 
     const timer = setInterval(() => {
       setPhaseTimeRemaining((prev) => {
         const newTime = prev - 1;
         if (newTime <= 0) {
-          clearInterval(timer);
           handlePhaseComplete();
         }
         return Math.max(0, newTime);
@@ -118,13 +114,12 @@ const SpeakingSectionPage: React.FC = () => {
     return () => clearInterval(timer);
   }, [currentPhase, phaseTimeRemaining]);
 
-  // Handler for phase completion
+  // Handle phase transitions
   const handlePhaseComplete = () => {
     const currentTask = taskProps[currentTaskIndex];
     
     switch (currentPhase) {
       case 'intro':
-        // After intro, go to reading if there's passage, otherwise audio or prompt
         if (hasPassage()) {
           setCurrentPhase('reading');
           setPhaseTimeRemaining(currentTask.readingTime);
@@ -132,12 +127,11 @@ const SpeakingSectionPage: React.FC = () => {
           setCurrentPhase('audio');
         } else {
           setCurrentPhase('prompt');
-          setPhaseTimeRemaining(5); // 5 seconds to read prompt
+          setPhaseTimeRemaining(5);
         }
         break;
         
       case 'reading':
-        // After reading, go to audio if there's audio, otherwise prompt
         if (hasAudio()) {
           setCurrentPhase('audio');
         } else {
@@ -147,30 +141,25 @@ const SpeakingSectionPage: React.FC = () => {
         break;
         
       case 'audio':
-        // After audio, go to prompt
         setCurrentPhase('prompt');
         setPhaseTimeRemaining(5);
         break;
         
       case 'prompt':
-        // After prompt, go to preparation
         setCurrentPhase('preparation');
         setPhaseTimeRemaining(currentTask.prepTime);
         break;
         
       case 'preparation':
-        // After preparation, go to recording
         setCurrentPhase('recording');
         setPhaseTimeRemaining(currentTask.responseTime);
         break;
         
       case 'recording':
-        // After recording, go to review
         setCurrentPhase('review');
         break;
         
       case 'review':
-        // After review, go to next task or complete
         if (currentTaskIndex < 3) {
           setCurrentTaskIndex((prev) => prev + 1);
           resetTaskFlow(currentTaskIndex + 1);
@@ -181,26 +170,15 @@ const SpeakingSectionPage: React.FC = () => {
     }
   };
 
-  // Reset the task flow for a new task
+  // Reset to beginning of task flow
   const resetTaskFlow = (taskIndex: number) => {
     setCurrentPhase('intro');
-    setPhaseTimeRemaining(5); // 5 seconds for intro
-  };
-
-  // Handle audio completion
-  const handleAudioComplete = () => {
-    handlePhaseComplete(); // Move to the next phase
+    setPhaseTimeRemaining(5);
   };
 
   // Handle recording capture
   const handleRecordingCapture = (taskId: string, recordingBlob: Blob) => {
     setTaskRecordings((prev) => ({ ...prev, [taskId]: recordingBlob }));
-    console.log(`Recording for task ${taskId} captured`);
-    handlePhaseComplete(); // Move to review phase
-  };
-
-  // Handle next task button click
-  const handleNextTask = () => {
     handlePhaseComplete();
   };
 
@@ -216,10 +194,6 @@ const SpeakingSectionPage: React.FC = () => {
         task4Recording: taskRecordings['task4'] ? new File([taskRecordings['task4']], 'task4.webm', { type: 'audio/webm' }) : null,
       };
 
-      if (!recordings.task1Recording || !recordings.task2Recording || !recordings.task3Recording || !recordings.task4Recording) {
-        console.warn('Missing recordings for one or more tasks. Submitting with null values.');
-      }
-
       const result = await submitSpeakingAnswers(testId, recordings as { 
         task1Recording: File; 
         task2Recording: File; 
@@ -229,48 +203,43 @@ const SpeakingSectionPage: React.FC = () => {
       
       setSubmissionResult(result);
       setSectionComplete(true);
-      console.log('Submission result:', result);
     } catch (error) {
-      console.error('Error submitting recordings:', error);
-      setError('Failed to submit recordings. Please try again.');
+      setError('Failed to submit recordings');
     }
   };
 
   // Helper functions
-  const formatTime = (seconds: number): string => {
+  const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const getTaskProgress = (): string => `Task ${currentTaskIndex + 1} of 4`;
+  const getTaskProgress = () => `Task ${currentTaskIndex + 1} of 4`;
 
-  // Helper functions to check content availability
-  const hasPassage = (): boolean => {
+  // Content availability checks
+  const hasPassage = () => {
     if (!speakingSection) return false;
     
     switch (currentTaskIndex) {
-      case 0: return false; // Task 1 has no passage
       case 1: return !!speakingSection.task2.passage;
       case 2: return !!speakingSection.task3.passage;
-      case 3: return false; // Task 4 has no passage
       default: return false;
     }
   };
 
-  const hasAudio = (): boolean => {
+  const hasAudio = () => {
     if (!speakingSection) return false;
     
     switch (currentTaskIndex) {
-      case 0: return false; // Task 1 has no audio
-      case 1: return !!speakingSection.task2.audioUrl;
-      case 2: return !!speakingSection.task3.audioUrl;
-      case 3: return !!speakingSection.task4.audioUrl;
+      case 1: return !!speakingSection.task2.audio_url;
+      case 2: return !!speakingSection.task3.audio_url;
+      case 3: return !!speakingSection.task4.audio_url;
       default: return false;
     }
   };
 
-  const getPassage = (): string => {
+  const getPassage = () => {
     if (!speakingSection) return '';
     
     switch (currentTaskIndex) {
@@ -280,22 +249,22 @@ const SpeakingSectionPage: React.FC = () => {
     }
   };
 
-  const getAudioUrl = (): string => {
+  const getAudioUrl = () => {
     if (!speakingSection) return '';
     
     switch (currentTaskIndex) {
-      case 1: return speakingSection.task2.audioUrl;
-      case 2: return speakingSection.task3.audioUrl;
-      case 3: return speakingSection.task4.audioUrl;
+      case 1: return speakingSection.task2.audio_url;
+      case 2: return speakingSection.task3.audio_url;
+      case 3: return speakingSection.task4.audio_url;
       default: return '';
     }
   };
 
-  const getPrompt = (): string => {
+  const getPrompt = () => {
     if (!speakingSection) return '';
     
     switch (currentTaskIndex) {
-      case 0: return (speakingSection.task1 as { prompt: string }).prompt;
+      case 0: return speakingSection.task1.prompt;
       case 1: return speakingSection.task2.prompt;
       case 2: return speakingSection.task3.prompt;
       case 3: return speakingSection.task4.prompt;
@@ -331,13 +300,8 @@ const SpeakingSectionPage: React.FC = () => {
         <main className="flex-grow container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Speaking Section Completed</h2>
-            {submissionResult && (
-              <div className="mb-6">
-                {submissionResult.score !== undefined && (
-                  <p className="text-xl font-semibold text-teal-600">Your Score: {submissionResult.score}</p>
-                )}
-                {submissionResult.feedback && <p className="text-gray-600 mt-2">{submissionResult.feedback}</p>}
-              </div>
+            {submissionResult && submissionResult.score !== undefined && (
+              <p className="text-xl font-semibold text-teal-600">Your Score: {submissionResult.score}</p>
             )}
             <button
               onClick={() => navigate('/')}
@@ -351,9 +315,8 @@ const SpeakingSectionPage: React.FC = () => {
     );
   }
 
+  // Main task view
   const currentTask = taskProps[currentTaskIndex];
-  
-  // Main render for the task in progress
   return (
     <div className="min-h-screen flex flex-col">
       <TopMenu 
@@ -372,9 +335,9 @@ const SpeakingSectionPage: React.FC = () => {
         recordingTime={currentTask.responseTime}
         taskId={currentTask.taskId}
         onPhaseComplete={handlePhaseComplete}
-        onAudioComplete={handleAudioComplete}
-        onRecordingCapture={(blob) => handleRecordingCapture(currentTask.taskId, blob)}
-        onNextTask={handleNextTask}
+        onAudioComplete={handlePhaseComplete}
+        onRecordingCapture={(blob: Blob) => handleRecordingCapture(currentTask.taskId, blob)}
+        onNextTask={handlePhaseComplete}
         hasRecording={!!taskRecordings[currentTask.taskId]}
         recordedAudio={taskRecordings[currentTask.taskId] ? URL.createObjectURL(taskRecordings[currentTask.taskId]) : null}
       />

@@ -189,9 +189,9 @@ export interface SpeakingSectionResponse {
   id: string;
   title: string;
   task1: Task1;
-  task2: { passage: string; audioUrl: string; prompt: string };
-  task3: { passage: string; audioUrl: string; prompt: string };
-  task4: { audioUrl: string; prompt: string };
+  task2: { passage: string; audio_url: string; prompt: string };
+  task3: { passage: string; audio_url: string; prompt: string };
+  task4: { audio_url: string; prompt: string };
 }
 
 // Writing Section Interfaces
