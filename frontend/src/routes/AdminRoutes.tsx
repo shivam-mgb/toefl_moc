@@ -4,15 +4,6 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 // Admin Dashboard
 import AdminDashboard from '../pages/admin/AdminDashboard';
 
-// Reading Section
-import ReadingPassagesList from '../pages/admin/reading/ReadingPassagesList';
-import AddReadingPassage from '../pages/admin/reading/AddReadingPassage';
-import ReadingPassageDetail from '../pages/admin/reading/ReadingPassageDetail';
-import EditReadingPassage from '../pages/admin/reading/EditReadingPassage';
-import ReadingQuestionsList from '../pages/admin/reading/ReadingQuestionsList';
-import AddReadingQuestion from '../pages/admin/reading/AddReadingQuestion';
-import EditReadingQuestion from '../pages/admin/reading/EditReadingQuestion';
-
 
 // Speaking Pages
 import SpeakingTasksOverview from '../pages/admin/speaking/SpeakingTasksOverview';
@@ -48,16 +39,6 @@ const AdminRoutes: React.FC = () => {
     <Routes>
       {/* Main admin dashboard */}
       <Route path="/" element={<AdminDashboard />} />
-
-      {/* Reading Section */}
-      <Route path="/reading" element={<Navigate to="/admin/reading/passages" replace />} />
-      <Route path="/reading/passages" element={<ReadingPassagesList />} />
-      <Route path="/reading/passages/add" element={<AddReadingPassage />} />
-      <Route path="/reading/passages/:id" element={<ReadingPassageDetail />} />
-      <Route path="/reading/passages/:id/edit" element={<EditReadingPassage />} />
-      <Route path="/reading/questions" element={<ReadingQuestionsList />} />
-      <Route path="/reading/questions/add" element={<AddReadingQuestion />} />
-      <Route path="/reading/questions/:id/edit" element={<EditReadingQuestion />} />
 
       {/* Speaking Section */}
       <Route path="/speaking" element={<Navigate to="/admin/speaking/overview" replace />} />

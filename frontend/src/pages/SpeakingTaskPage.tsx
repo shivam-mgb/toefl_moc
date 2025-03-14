@@ -1,243 +1,202 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Navigation from '../components/Navigation';
 import TaskPromptArea from '../components/TaskPromptArea';
 import PreparationTimerArea from '../components/PreparationTimerArea';
-import { SpeakingSectionResponse } from '../types/types';
 import AudioPlayerComponent from '../components/AudioPlayerComponent';
 import MediaRecorderComponent from '../components/MediaRecorderComponent';
 
 interface SpeakingTaskPageProps {
     taskType: number;
-    speakingContent: SpeakingSectionResponse;
-    prepTime: number;
-    responseTime: number;
-    onPrepTimeEnd: () => void;
-    onResponseTimeEnd: () => void;
-    isInitialPromptPhase: boolean;
     title: string;
-    onTaskComplete: () => void;
-    onRecordingCapture: (recordingBlob: Blob) => void;
-}
-
-const SpeakingTaskPage: React.FC<SpeakingTaskPageProps> = ({
+    currentPhase: 'intro' | 'reading' | 'audio' | 'prompt' | 'preparation' | 'recording' | 'review';
+    phaseTimeRemaining: number;
+    passage?: string;
+    audioUrl?: string;
+    prompt: string;
+    recordingTime: number;
+    taskId: string;
+    onPhaseComplete: () => void;
+    onAudioComplete: () => void;
+    onRecordingCapture: (blob: Blob) => void;
+    onNextTask: () => void;
+    hasRecording: boolean;
+    recordedAudio: string | null;
+  }
+  
+  const SpeakingTaskPage: React.FC<SpeakingTaskPageProps> = ({
     taskType,
-    speakingContent,
-    prepTime,
-    responseTime,
-    onPrepTimeEnd,
-    onResponseTimeEnd,
-    isInitialPromptPhase,
     title,
-    onTaskComplete,
-    onRecordingCapture
-}) => {
-    const [isReadingPhase, setIsReadingPhase] = useState(false);
-    const [isAudioPhase, setIsAudioPhase] = useState(false);
-    const [isPromptReadingPhase, setIsPromptReadingPhase] = useState(false);
-    const [isPreparationPhase, setIsPreparationPhase] = useState(false);
-    const [isRecordingPhase, setIsRecordingPhase] = useState(false);
-    const [hasRecording, setHasRecording] = useState(false);
-    const [readingTimeRemaining, setReadingTimeRemaining] = useState(5);
-    const [preparationTimeRemaining, setPreparationTimeRemaining] = useState(prepTime);
-    const [recordingTimeRemaining, setRecordingTimeRemaining] = useState(responseTime);
-    const [recordedAudio, setRecordedAudio] = useState<string | null>(null);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [startRecording, setStartRecording] = useState(false);
-
-    // Log props on mount/update
-    useEffect(() => {
-        console.log("SpeakingTaskPage props:", { taskType, prepTime, responseTime, isInitialPromptPhase });
-    }, [taskType, prepTime, responseTime, isInitialPromptPhase]);
-
-    // Extract task-specific properties
-    let passage: string | undefined;
-    let audioUrl: string | undefined;
-    let prompt: string;
-
-    if (taskType === 1) {
-        const task1 = speakingContent.task1 as { readingPassage: string; prompt: string };
-        passage = task1.readingPassage;
-        prompt = task1.prompt;
-    } else if (taskType === 2) {
-        passage = speakingContent.task2.passage;
-        audioUrl = speakingContent.task2.audioUrl;
-        prompt = speakingContent.task2.prompt;
-    } else if (taskType === 3) {
-        passage = speakingContent.task3.passage;
-        audioUrl = speakingContent.task3.audioUrl;
-        prompt = speakingContent.task3.prompt;
-    } else if (taskType === 4) {
-        audioUrl = speakingContent.task4.audioUrl;
-        prompt = speakingContent.task4.prompt;
-    } else {
-        throw new Error('Invalid taskType');
-    }
-
-    const handleRecordingComplete = (audioUrl: string) => {
-        setRecordedAudio(audioUrl);
-        setHasRecording(true);
-        setIsRecordingPhase(false);
-        setIsPlaying(true);
-        setStartRecording(false);
-        onResponseTimeEnd();
+    currentPhase,
+    phaseTimeRemaining,
+    passage,
+    audioUrl,
+    prompt,
+    recordingTime,
+    taskId,
+    onPhaseComplete,
+    onAudioComplete,
+    onRecordingCapture,
+    onNextTask,
+    hasRecording,
+    recordedAudio
+  }) => {
+    const formatTime = (seconds: number): string => {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
     };
-
-    const handlePlay = () => setIsPlaying(true);
-    const handlePause = () => setIsPlaying(false);
-
-    useEffect(() => {
-        console.log("Initial Prompt Phase, isInitialPromptPhase:", isInitialPromptPhase);
-        if (isInitialPromptPhase) {
-            const timer = setTimeout(() => {
-                console.log("Initial prompt timeout fired");
-                onPrepTimeEnd();
-                if (passage) {
-                    setIsReadingPhase(true);
-                    console.log("Transition to reading phase");
-                } else if (!audioUrl) {
-                    setIsPromptReadingPhase(true);
-                    console.log("Transition to prompt reading phase");
-                } else {
-                    setIsAudioPhase(true);
-                    console.log("Transition to audio phase");
-                }
-            }, 5000);
-            return () => {
-                console.log("Initial prompt cleanup");
-                clearTimeout(timer);
-            };
-        }
-    }, [isInitialPromptPhase, passage, audioUrl, onPrepTimeEnd]);
-
-    useEffect(() => {
-        if (isReadingPhase && readingTimeRemaining > 0) {
-            console.log("Reading Phase active, time remaining:", readingTimeRemaining);
-            const timer = setTimeout(() => {
-                console.log("Reading timeout fired");
-                setIsReadingPhase(false);
-                if (audioUrl) {
-                    setIsAudioPhase(true);
-                    console.log("Transition from reading to audio phase");
-                } else {
-                    setIsPromptReadingPhase(true);
-                    console.log("Transition from reading to prompt reading phase");
-                }
-            }, readingTimeRemaining * 1000);
-            return () => {
-                console.log("Reading cleanup");
-                clearTimeout(timer);
-            };
-        }
-    }, [isReadingPhase, readingTimeRemaining, audioUrl]);
-
-    useEffect(() => {
-        if (isAudioPhase && audioUrl) {
-            console.log("Audio Phase active");
-        }
-    }, [isAudioPhase, audioUrl]);
-
-    useEffect(() => {
-        if (isPromptReadingPhase) {
-            console.log("Prompt Reading Phase active");
-            const timer = setTimeout(() => {
-                console.log("Prompt reading timeout fired");
-                setIsPromptReadingPhase(false);
-                setIsPreparationPhase(true);
-                console.log("Transition to preparation phase");
-            }, 5000);
-            return () => {
-                console.log("Prompt reading cleanup");
-                clearTimeout(timer);
-            };
-        }
-    }, [isPromptReadingPhase]);
-
-    useEffect(() => {
-        console.log("Preparation Phase check, isPreparationPhase:", isPreparationPhase, "prepTime:", preparationTimeRemaining);
-        if (isPreparationPhase) {
-            console.log("Preparation Phase started");
-            const timer = setTimeout(() => {
-                console.log("Preparation timeout fired");
-                setIsPreparationPhase(false);
-                setIsRecordingPhase(true);
-                setStartRecording(true);
-                console.log("startRecording set to true");
-            }, preparationTimeRemaining * 1000);
-            return () => {
-                console.log("Preparation cleanup");
-                clearTimeout(timer);
-            };
-        }
-    }, [isPreparationPhase, preparationTimeRemaining]);
-
-    const handleAudioEnd = () => {
-        setIsAudioPhase(false);
-        setIsPromptReadingPhase(true);
-        console.log("Audio ended, transitioning to prompt reading phase");
-    };
-
-    return (
-        <div className="min-h-screen flex flex-col bg-gray-100">
-            <main className="flex-grow container mx-auto px-4 py-8">
-                <div className="max-w-4xl mx-auto space-y-8">
-                    <h1 className="text-2xl font-bold text-gray-800 text-center">
-                        {title}
-                    </h1>
-                    {isInitialPromptPhase ? (
-                        <TaskPromptArea promptText="Here the task intro should be. Maybe the constant message on the task number? Yeah prob." />
-                    ) : isReadingPhase && passage ? (
-                        <>
-                            <div className="text-gray-700">{passage}</div>
-                            <p>Time remaining: {readingTimeRemaining} seconds</p>
-                        </>
-                    ) : isAudioPhase && audioUrl ? (
-                        <AudioPlayerComponent
-                            audioSrc={audioUrl}
-                            isPlaying={true}
-                            onPlay={handlePlay}
-                            onPause={handlePause}
-                            onEnded={handleAudioEnd}
-                        />
-                    ) : isPromptReadingPhase ? (
-                        <>
-                            <TaskPromptArea promptText={prompt} />
-                            <p>Time remaining: 5 seconds</p>
-                        </>
-                    ) : isPreparationPhase ? (
-                        <>
-                            <TaskPromptArea promptText={prompt} />
-                            <PreparationTimerArea timeRemaining={preparationTimeRemaining} />
-                        </>
-                    ) : isRecordingPhase ? (
-                        <MediaRecorderComponent
-                            recordingTime={recordingTimeRemaining}
-                            onRecordingComplete={handleRecordingComplete}
-                            startRecording={startRecording}
-                            onRecordingCapture={onRecordingCapture}
-                        />
-                    ) : (
-                        <>
-                            {recordedAudio && (
-                                <AudioPlayerComponent
-                                    audioSrc={recordedAudio}
-                                    isPlaying={isPlaying}
-                                    onPlay={handlePlay}
-                                    onPause={handlePause}
-                                    onEnded={() => console.log('just logging')}
-                                />
-                            )}
-                            <Navigation
-                                onNext={onTaskComplete}
-                                isNextDisabled={!hasRecording}
-                            >
-                                Next
-                            </Navigation>
-                        </>
-                    )}
+  
+    // Content for each phase
+    const renderPhaseContent = () => {
+      switch (currentPhase) {
+        case 'intro':
+          return (
+            <div className="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto">
+              <h2 className="text-xl font-bold mb-4">{title}</h2>
+              <p className="mb-4">
+                {taskType === 1 && "You will be asked to speak about a personal experience or opinion."}
+                {taskType === 2 && "You will read a short passage, listen to an audio, and then respond to a question."}
+                {taskType === 3 && "You will read a short passage, listen to an academic lecture, and then speak about how they relate."}
+                {taskType === 4 && "You will listen to an academic lecture and then speak about the main points."}
+              </p>
+              <p className="mb-4">Get ready to begin this task. The task will start in {phaseTimeRemaining} seconds.</p>
+              <button
+                onClick={onPhaseComplete}
+                className="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded"
+              >
+                Start Now
+              </button>
+            </div>
+          );
+  
+        case 'reading':
+          return (
+            <div className="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto">
+              <div className="mb-4 flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Reading Passage</h3>
+                <div className="text-teal-600 font-medium">Time remaining: {formatTime(phaseTimeRemaining)}</div>
+              </div>
+              <div className="border p-4 bg-gray-50 rounded-md mb-4 max-h-80 overflow-y-auto">
+                <p>{passage}</p>
+              </div>
+              <button
+                onClick={onPhaseComplete}
+                className="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded"
+              >
+                Continue
+              </button>
+            </div>
+          );
+  
+        case 'audio':
+          return (
+            <div className="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto">
+              <h3 className="text-lg font-semibold mb-4">Listen to Audio</h3>
+              <div className="mb-6">
+                <AudioPlayerComponent 
+                  audioSrc={audioUrl || ''} 
+                  onEnded={onAudioComplete} 
+                  isPlaying={true}
+                  onPause={() => {}}
+                  onPlay={() => {}}
+                />
+              </div>
+              <p className="text-sm text-gray-600">Please listen to the entire audio before continuing.</p>
+            </div>
+          );
+  
+        case 'prompt':
+          return (
+            <div className="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto">
+              <div className="mb-4 flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Question Prompt</h3>
+                <div className="text-teal-600 font-medium">Time remaining: {formatTime(phaseTimeRemaining)}</div>
+              </div>
+              <TaskPromptArea promptText={prompt} />
+              <button
+                onClick={onPhaseComplete}
+                className="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded mt-4"
+              >
+                Continue
+              </button>
+            </div>
+          );
+  
+        case 'preparation':
+          return (
+            <div className="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto">
+              <div className="mb-4 flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Preparation Time</h3>
+                <div className="text-teal-600 font-medium">Time remaining: {formatTime(phaseTimeRemaining)}</div>
+              </div>
+              <TaskPromptArea promptText={prompt} />
+              <PreparationTimerArea timeRemaining={phaseTimeRemaining} />
+              <button
+                onClick={onPhaseComplete}
+                className="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded mt-4"
+              >
+                Skip Preparation
+              </button>
+            </div>
+          );
+  
+        case 'recording':
+          return (
+            <div className="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto">
+              <div className="mb-4 flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Recording</h3>
+                <div className="text-teal-600 font-medium">Time remaining: {formatTime(phaseTimeRemaining)}</div>
+              </div>
+              <TaskPromptArea promptText={prompt} />
+              <div className="mt-6">
+                <MediaRecorderComponent 
+                  recordingTime={recordingTime}
+                  taskId={taskId}
+                  onRecordingCapture={onRecordingCapture}
+                />
+              </div>
+            </div>
+          );
+  
+        case 'review':
+          return (
+            <div className="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto">
+              <h3 className="text-lg font-semibold mb-4">Review Your Response</h3>
+              <TaskPromptArea promptText={prompt} />
+              
+              {hasRecording && recordedAudio ? (
+                <div className="my-6">
+                  <p className="mb-2">Your recorded response:</p>
+                  <audio src={recordedAudio} controls className="w-full"></audio>
                 </div>
-            </main>
+              ) : (
+                <p className="text-yellow-600 my-6">No recording available for review.</p>
+              )}
+              
+              <button
+                onClick={onNextTask}
+                className="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded"
+              >
+                {taskType < 4 ? "Next Task" : "Complete Section"}
+              </button>
+            </div>
+          );
+  
+        default:
+          return <div>Unknown phase</div>;
+      }
+    };
+  
+    return (
+      <main className="flex-grow container mx-auto px-4 py-8">
+        <div className="flex flex-col h-full">
+          {/* <Navigation onNext={onNextTask}>
+            Next
+          </Navigation> */}
+          {renderPhaseContent()}
         </div>
+      </main>
     );
-};
-
-export default SpeakingTaskPage;
+  };
+  
+  export default SpeakingTaskPage;

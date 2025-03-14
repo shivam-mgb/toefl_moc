@@ -9,16 +9,57 @@ const SpeakingSectionPage: React.FC = () => {
   const { testId } = useParams<{ testId: string }>();
   const navigate = useNavigate();
 
+  // Page state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [speakingSection, setSpeakingSection] = useState<SpeakingSectionResponse | null>(null);
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
   const [sectionComplete, setSectionComplete] = useState(false);
   const [sectionTimeRemaining, setSectionTimeRemaining] = useState(1200);
-  const [isPrepTime, setIsPrepTime] = useState(true);
   const [taskRecordings, setTaskRecordings] = useState<Record<string, Blob>>({});
   const [submissionResult, setSubmissionResult] = useState<any>(null);
 
+  // Task flow states
+  const [currentPhase, setCurrentPhase] = useState<'intro' | 'reading' | 'audio' | 'prompt' | 'preparation' | 'recording' | 'review'>('intro');
+  const [phaseTimeRemaining, setPhaseTimeRemaining] = useState(0);
+  
+  // Define task-specific props
+  const taskProps = [
+    {
+      taskType: 1,
+      title: 'Task 1: Independent Speaking - Personal Experience/Opinion',
+      prepTime: 10,
+      responseTime: 5,
+      taskId: 'task1',
+      readingTime: 0,
+    },
+    {
+      taskType: 2,
+      title: 'Task 2: Integrated Speaking - Reading & Listening & Speaking',
+      prepTime: 11,
+      responseTime: 5,
+      taskId: 'task2',
+      readingTime: 5,
+    },
+    {
+      taskType: 3,
+      title: 'Task 3: Integrated Speaking - Academic Lecture',
+      prepTime: 13,
+      responseTime: 6,
+      taskId: 'task3',
+      readingTime: 5,
+    },
+    {
+      taskType: 4,
+      title: 'Task 4: Integrated Speaking - Academic Lecture',
+      prepTime: 15,
+      responseTime: 6,
+      taskId: 'task4',
+      readingTime: 0,
+    },
+  ];
+
+  // Fetch the speaking section data
   useEffect(() => {
     if (!testId) {
       setError('No test ID provided');
@@ -31,6 +72,8 @@ const SpeakingSectionPage: React.FC = () => {
       .then((data) => {
         setSpeakingSection(data);
         setLoading(false);
+        // Initialize the first task
+        resetTaskFlow(0);
       })
       .catch((err) => {
         console.error('Error fetching speaking section:', err);
@@ -39,6 +82,7 @@ const SpeakingSectionPage: React.FC = () => {
       });
   }, [testId]);
 
+  // Global section timer
   useEffect(() => {
     if (sectionComplete || sectionTimeRemaining <= 0) {
       if (sectionTimeRemaining <= 0 && !sectionComplete) {
@@ -54,31 +98,113 @@ const SpeakingSectionPage: React.FC = () => {
     return () => clearInterval(timer);
   }, [sectionComplete, sectionTimeRemaining]);
 
-  const formatTime = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
+  // Phase timer effect
+  useEffect(() => {
+    if (phaseTimeRemaining <= 0 || currentPhase === 'audio' || currentPhase === 'review') {
+      return; // Don't run timer for audio (handled by audio component) or review phase
+    }
 
-  const getTaskProgress = (): string => `Task ${currentTaskIndex + 1} of 4`;
+    const timer = setInterval(() => {
+      setPhaseTimeRemaining((prev) => {
+        const newTime = prev - 1;
+        if (newTime <= 0) {
+          clearInterval(timer);
+          handlePhaseComplete();
+        }
+        return Math.max(0, newTime);
+      });
+    }, 1000);
 
-  const handlePrepTimeEnd = () => setIsPrepTime(false);
-  const handleResponseTimeEnd = () => handleTaskComplete();
+    return () => clearInterval(timer);
+  }, [currentPhase, phaseTimeRemaining]);
 
-  const handleTaskComplete = () => {
-    if (currentTaskIndex < 3) {
-      setCurrentTaskIndex((prev) => prev + 1);
-      setIsPrepTime(true);
-    } else {
-      handleSubmitAllRecordings();
+  // Handler for phase completion
+  const handlePhaseComplete = () => {
+    const currentTask = taskProps[currentTaskIndex];
+    
+    switch (currentPhase) {
+      case 'intro':
+        // After intro, go to reading if there's passage, otherwise audio or prompt
+        if (hasPassage()) {
+          setCurrentPhase('reading');
+          setPhaseTimeRemaining(currentTask.readingTime);
+        } else if (hasAudio()) {
+          setCurrentPhase('audio');
+        } else {
+          setCurrentPhase('prompt');
+          setPhaseTimeRemaining(5); // 5 seconds to read prompt
+        }
+        break;
+        
+      case 'reading':
+        // After reading, go to audio if there's audio, otherwise prompt
+        if (hasAudio()) {
+          setCurrentPhase('audio');
+        } else {
+          setCurrentPhase('prompt');
+          setPhaseTimeRemaining(5);
+        }
+        break;
+        
+      case 'audio':
+        // After audio, go to prompt
+        setCurrentPhase('prompt');
+        setPhaseTimeRemaining(5);
+        break;
+        
+      case 'prompt':
+        // After prompt, go to preparation
+        setCurrentPhase('preparation');
+        setPhaseTimeRemaining(currentTask.prepTime);
+        break;
+        
+      case 'preparation':
+        // After preparation, go to recording
+        setCurrentPhase('recording');
+        setPhaseTimeRemaining(currentTask.responseTime);
+        break;
+        
+      case 'recording':
+        // After recording, go to review
+        setCurrentPhase('review');
+        break;
+        
+      case 'review':
+        // After review, go to next task or complete
+        if (currentTaskIndex < 3) {
+          setCurrentTaskIndex((prev) => prev + 1);
+          resetTaskFlow(currentTaskIndex + 1);
+        } else {
+          handleSubmitAllRecordings();
+        }
+        break;
     }
   };
 
+  // Reset the task flow for a new task
+  const resetTaskFlow = (taskIndex: number) => {
+    setCurrentPhase('intro');
+    setPhaseTimeRemaining(5); // 5 seconds for intro
+  };
+
+  // Handle audio completion
+  const handleAudioComplete = () => {
+    handlePhaseComplete(); // Move to the next phase
+  };
+
+  // Handle recording capture
   const handleRecordingCapture = (taskId: string, recordingBlob: Blob) => {
     setTaskRecordings((prev) => ({ ...prev, [taskId]: recordingBlob }));
     console.log(`Recording for task ${taskId} captured`);
+    handlePhaseComplete(); // Move to review phase
   };
 
+  // Handle next task button click
+  const handleNextTask = () => {
+    handlePhaseComplete();
+  };
+
+  // Submit all recordings
   const handleSubmitAllRecordings = async () => {
     if (!testId || !speakingSection) return;
 
@@ -94,7 +220,13 @@ const SpeakingSectionPage: React.FC = () => {
         console.warn('Missing recordings for one or more tasks. Submitting with null values.');
       }
 
-      const result = await submitSpeakingAnswers(testId, recordings as { task1Recording: File; task2Recording: File; task3Recording: File; task4Recording: File; });
+      const result = await submitSpeakingAnswers(testId, recordings as { 
+        task1Recording: File; 
+        task2Recording: File; 
+        task3Recording: File; 
+        task4Recording: File; 
+      });
+      
       setSubmissionResult(result);
       setSectionComplete(true);
       console.log('Submission result:', result);
@@ -104,10 +236,79 @@ const SpeakingSectionPage: React.FC = () => {
     }
   };
 
+  // Helper functions
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  const getTaskProgress = (): string => `Task ${currentTaskIndex + 1} of 4`;
+
+  // Helper functions to check content availability
+  const hasPassage = (): boolean => {
+    if (!speakingSection) return false;
+    
+    switch (currentTaskIndex) {
+      case 0: return false; // Task 1 has no passage
+      case 1: return !!speakingSection.task2.passage;
+      case 2: return !!speakingSection.task3.passage;
+      case 3: return false; // Task 4 has no passage
+      default: return false;
+    }
+  };
+
+  const hasAudio = (): boolean => {
+    if (!speakingSection) return false;
+    
+    switch (currentTaskIndex) {
+      case 0: return false; // Task 1 has no audio
+      case 1: return !!speakingSection.task2.audioUrl;
+      case 2: return !!speakingSection.task3.audioUrl;
+      case 3: return !!speakingSection.task4.audioUrl;
+      default: return false;
+    }
+  };
+
+  const getPassage = (): string => {
+    if (!speakingSection) return '';
+    
+    switch (currentTaskIndex) {
+      case 1: return speakingSection.task2.passage;
+      case 2: return speakingSection.task3.passage;
+      default: return '';
+    }
+  };
+
+  const getAudioUrl = (): string => {
+    if (!speakingSection) return '';
+    
+    switch (currentTaskIndex) {
+      case 1: return speakingSection.task2.audioUrl;
+      case 2: return speakingSection.task3.audioUrl;
+      case 3: return speakingSection.task4.audioUrl;
+      default: return '';
+    }
+  };
+
+  const getPrompt = (): string => {
+    if (!speakingSection) return '';
+    
+    switch (currentTaskIndex) {
+      case 0: return (speakingSection.task1 as { prompt: string }).prompt;
+      case 1: return speakingSection.task2.prompt;
+      case 2: return speakingSection.task3.prompt;
+      case 3: return speakingSection.task4.prompt;
+      default: return '';
+    }
+  };
+
+  // Loading state
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading speaking section...</div>;
   }
 
+  // Error state
   if (error || !speakingSection) {
     return (
       <div className="min-h-screen flex items-center justify-center flex-col">
@@ -122,6 +323,7 @@ const SpeakingSectionPage: React.FC = () => {
     );
   }
 
+  // Completion state
   if (sectionComplete) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-100">
@@ -149,54 +351,32 @@ const SpeakingSectionPage: React.FC = () => {
     );
   }
 
-  // Define task-specific props based on currentTaskIndex
-  const taskProps = [
-    {
-      taskType: 1,
-      title: 'Task 1: Independent Speaking - Personal Experience/Opinion',
-      prepTime: 10,
-      responseTime: 5,
-      taskId: 'task1',
-    },
-    {
-      taskType: 2,
-      title: 'Task 2: Integrated Speaking - Reading & Listening & Speaking',
-      prepTime: 11,
-      responseTime: 5,
-      taskId: 'task2',
-    },
-    {
-      taskType: 3,
-      title: 'Task 3: Integrated Speaking - Academic Lecture',
-      prepTime: 13,
-      responseTime: 6,
-      taskId: 'task3',
-    },
-    {
-      taskType: 4,
-      title: 'Task 4: Integrated Speaking - Academic Lecture',
-      prepTime: 15,
-      responseTime: 6,
-      taskId: 'task4',
-    },
-  ];
-
   const currentTask = taskProps[currentTaskIndex];
-
+  
+  // Main render for the task in progress
   return (
     <div className="min-h-screen flex flex-col">
-      <TopMenu sectionTitle="Speaking Section" questionProgress={getTaskProgress()} timer={formatTime(sectionTimeRemaining)} />
+      <TopMenu 
+        sectionTitle="Speaking Section" 
+        questionProgress={getTaskProgress()} 
+        timer={formatTime(sectionTimeRemaining)} 
+      />
       <SpeakingTaskPage
         taskType={currentTask.taskType}
-        speakingContent={speakingSection}
-        prepTime={currentTask.prepTime}
-        responseTime={currentTask.responseTime}
-        onPrepTimeEnd={handlePrepTimeEnd}
-        onResponseTimeEnd={handleResponseTimeEnd}
-        isInitialPromptPhase={isPrepTime}
         title={currentTask.title}
-        onTaskComplete={handleTaskComplete}
-        onRecordingCapture={(recordingBlob) => handleRecordingCapture(currentTask.taskId, recordingBlob)}
+        currentPhase={currentPhase}
+        phaseTimeRemaining={phaseTimeRemaining}
+        passage={getPassage()}
+        audioUrl={getAudioUrl()}
+        prompt={getPrompt()}
+        recordingTime={currentTask.responseTime}
+        taskId={currentTask.taskId}
+        onPhaseComplete={handlePhaseComplete}
+        onAudioComplete={handleAudioComplete}
+        onRecordingCapture={(blob) => handleRecordingCapture(currentTask.taskId, blob)}
+        onNextTask={handleNextTask}
+        hasRecording={!!taskRecordings[currentTask.taskId]}
+        recordedAudio={taskRecordings[currentTask.taskId] ? URL.createObjectURL(taskRecordings[currentTask.taskId]) : null}
       />
     </div>
   );
