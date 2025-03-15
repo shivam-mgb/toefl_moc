@@ -678,7 +678,8 @@ def get_writing_section(section_id):
     return jsonify({
         'id': section.id,
         'title': section.title,
-        'tasks': tasks_data
+        'task1': tasks_data[0],
+        'task2': tasks_data[1]
     }), 200
 
 @app.route('/writing/<int:section_id>', methods=['PUT'])

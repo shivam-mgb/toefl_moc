@@ -42,6 +42,8 @@ const WritingSectionPage: React.FC = () => {
     getWritingSection(testId)
       .then((data) => {
         setWritingSection(data);
+        console.log('this is the writing response: ', data);
+        
         setLoading(false);
       })
       .catch((err) => {
@@ -142,12 +144,15 @@ const WritingSectionPage: React.FC = () => {
     );
   }
 
-  // Map tasks to a consistent format
-  const tasks: WritingTask[] = [
-    { type: 'integrated', passage: writingSection.task1.passage, audioUrl: writingSection.task1.audio_url, prompt: writingSection.task1.prompt },
-    { type: 'independent', passage: writingSection.task2.passage, audioUrl: undefined, prompt: writingSection.task2.prompt },
-  ];
-  const currentTask = tasks[currentTaskIndex];
+  let currentTask: WritingTask | undefined; // Initialize as undefined
+  if (writingSection) { // Only define tasks and currentTask if writingSection is available
+    const tasks: WritingTask[] = [
+      { type: 'integrated', passage: writingSection.task1.passage, audioUrl: writingSection.task1.audio_url, prompt: writingSection.task1.prompt },
+      { type: 'independent', passage: writingSection.task2.passage, audioUrl: undefined, prompt: writingSection.task2.prompt },
+    ];
+    currentTask = tasks[currentTaskIndex];
+  }
+
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -156,11 +161,14 @@ const WritingSectionPage: React.FC = () => {
         questionProgress={`Task ${currentTaskIndex + 1} of 2`}
         timer={formatTime(sectionTimeRemaining)}
       />
-      <WritingTaskPage
-        task={currentTask}
-        taskId={`task${currentTaskIndex + 1}`}
-        onTaskComplete={handleTaskComplete}
-      />
+      {/* Conditionally render WritingTaskPage only when currentTask is defined (meaning writingSection is loaded) */}
+      {currentTask && (
+        <WritingTaskPage
+          task={currentTask}
+          taskId={`task${currentTaskIndex + 1}`}
+          onTaskComplete={handleTaskComplete}
+        />
+      )}
     </div>
   );
 };
