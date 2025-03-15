@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import TopMenu from '../components/TopMenu';
 import SpeakingTaskPage from './SpeakingTaskPage';
@@ -58,6 +58,12 @@ const SpeakingSectionPage = () => {
       readingTime: 0,
     },
   ];
+
+  const currentTask = taskProps[currentTaskIndex];
+  const recordedAudio = useMemo(() => {
+    const recordingBlob = currentTask?.taskId ? taskRecordings[currentTask.taskId] : null;
+    return recordingBlob ? URL.createObjectURL(recordingBlob) : null;
+  }, [taskRecordings, currentTaskIndex]); 
 
   // Fetch data on load
   useEffect(() => {
@@ -316,7 +322,6 @@ const SpeakingSectionPage = () => {
   }
 
   // Main task view
-  const currentTask = taskProps[currentTaskIndex];
   return (
     <div className="min-h-screen flex flex-col">
       <TopMenu 
@@ -339,7 +344,7 @@ const SpeakingSectionPage = () => {
         onRecordingCapture={(blob: Blob) => handleRecordingCapture(currentTask.taskId, blob)}
         onNextTask={handlePhaseComplete}
         hasRecording={!!taskRecordings[currentTask.taskId]}
-        recordedAudio={taskRecordings[currentTask.taskId] ? URL.createObjectURL(taskRecordings[currentTask.taskId]) : null}
+        recordedAudio={recordedAudio}
       />
     </div>
   );
