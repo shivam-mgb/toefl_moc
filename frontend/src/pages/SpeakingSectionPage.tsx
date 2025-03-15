@@ -5,7 +5,7 @@ import SpeakingTaskPage from './SpeakingTaskPage';
 import { SpeakingSectionResponse } from '../types/types';
 import { getSpeakingSection, submitSpeakingAnswers } from '../api/api';
 
-const SpeakingSectionPage = () => {
+const SpeakingSectionPage: React.FC = () => {
   const { testId } = useParams();
   const navigate = useNavigate();
 
@@ -103,7 +103,7 @@ const SpeakingSectionPage = () => {
 
   // Phase timer
   useEffect(() => {
-    if (phaseTimeRemaining <= 0 || currentPhase === 'audio' || currentPhase === 'review') {
+    if (phaseTimeRemaining <= 0 || currentPhase === 'audio' || currentPhase === 'review' || currentPhase === 'recording') {
       return;
     }
 
@@ -178,6 +178,8 @@ const SpeakingSectionPage = () => {
 
   // Reset to beginning of task flow
   const resetTaskFlow = (taskIndex: number) => {
+    console.log(taskIndex);
+    
     setCurrentPhase('intro');
     setPhaseTimeRemaining(5);
   };

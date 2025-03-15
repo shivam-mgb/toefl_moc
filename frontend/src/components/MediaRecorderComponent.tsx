@@ -19,11 +19,15 @@ const MediaRecorderComponent: React.FC<MediaRecorderComponentProps> = ({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
-    // Initialize the recorder on component mount
-    initializeMediaRecorder();
+  const hasInitialized = useRef(false);
 
-    // Cleanup function
+  useEffect(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+    
+    console.log("Recording time set to:", recordingTime);
+    initializeMediaRecorder();
+    
     return () => {
       if (mediaRecorderRef.current) {
         if (mediaRecorderRef.current.state === 'recording') {
@@ -58,11 +62,12 @@ const MediaRecorderComponent: React.FC<MediaRecorderComponentProps> = ({
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const url = URL.createObjectURL(audioBlob);
         setAudioUrl(url);
-        console.log('setting audio url and returning blob');
         
-        onRecordingCapture(audioBlob);
-        console.log('now you should have the blob');
-        // Stop the countdown timer
+        // Add a small delay before notifying the parent component
+        setTimeout(() => {
+          onRecordingCapture(audioBlob);
+        }, 500);
+        
         if (intervalRef.current) {
           clearInterval(intervalRef.current);
         }
@@ -79,18 +84,22 @@ const MediaRecorderComponent: React.FC<MediaRecorderComponentProps> = ({
   const startRecording = () => {
     if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'recording') return;
     
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    
     audioChunksRef.current = [];
     setTimeRemaining(recordingTime);
     
-    // Start the recorder
-    mediaRecorderRef.current.start();
+    mediaRecorderRef.current.start(100);
     setIsRecording(true);
     
-    // Start countdown timer
     intervalRef.current = setInterval(() => {
+      console.log("Interval tick at:", new Date().toISOString());
       setTimeRemaining(prev => {
-        if (prev <= 1) {
-          // Stop the recording when time is up
+        const newTime = prev - 1;
+        console.log("Time remaining:", newTime, "at:", new Date().toISOString());
+        if (newTime <= 0) {
           if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
             mediaRecorderRef.current.stop();
           }
@@ -99,19 +108,19 @@ const MediaRecorderComponent: React.FC<MediaRecorderComponentProps> = ({
           }
           return 0;
         }
-        return prev - 1;
+        return newTime;
       });
     }, 1000);
     
-    // Set a timeout to stop recording after the specified time
     timerRef.current = setTimeout(() => {
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
         mediaRecorderRef.current.stop();
       }
     }, recordingTime * 1000);
   };
-
+  
   const stopRecording = () => {
+    console.log("Stopping recording after", recordingTime - timeRemaining, "seconds");
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();
     }
