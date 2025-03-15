@@ -218,7 +218,7 @@ export interface WritingSectionRequest {
 export interface WritingSectionResponse {
   id: string;
   title: string;
-  task1: { passage: string; audioUrl: string; prompt: string };
+  task1: { passage: string; audio_url: string; prompt: string };
   task2: { passage: string; prompt: string };
 }
 
