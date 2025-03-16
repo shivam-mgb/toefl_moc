@@ -34,7 +34,7 @@ const ListeningArea: React.FC<ListeningAreaProps> = ({ audioUrl, timeRemaining, 
       {/* Timer and Instructions */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex flex-col items-center space-y-4">
-          <TimerComponent time={timeRemaining} label="Listening Time Remaining" isWarning={false} />
+          {/* <TimerComponent time={timeRemaining} label="Listening Time Remaining" isWarning={false} /> */}
           <p className="text-gray-600 font-medium">Listen to the lecture carefully. You will need this information to write your response.</p>
         </div>
       </div>

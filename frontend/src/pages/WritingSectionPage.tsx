@@ -57,7 +57,7 @@ const WritingSectionPage: React.FC = () => {
   useEffect(() => {
     if (sectionComplete || sectionTimeRemaining <= 0) {
       if (sectionTimeRemaining <= 0 && !sectionComplete) {
-        handleSubmitAllResponses();
+        handleSubmitAllResponses(taskResponses); // this submision needs the input up to that point (even if it's not finished)
       }
       return;
     }
@@ -78,20 +78,27 @@ const WritingSectionPage: React.FC = () => {
 
   // Handle task completion
   const handleTaskComplete = (taskId: string, essayText: string) => {
-    setTaskResponses((prev) => ({ ...prev, [taskId]: essayText }));
-    if (currentTaskIndex < 1) { // Only two tasks: task1 and task2
+    setTaskResponses((prev) => {
+      const updatedResponses = { ...prev, [taskId]: essayText };
+      if (currentTaskIndex >= 1) {
+        console.log('just before the submit: ', updatedResponses);
+        handleSubmitAllResponses(updatedResponses);
+      }
+      return updatedResponses;
+    });
+
+    if (currentTaskIndex < 1) {
+      setSectionTimeRemaining(600); // 10 mins on task two
       setCurrentTaskIndex((prev) => prev + 1);
-    } else {
-      handleSubmitAllResponses();
     }
   };
 
   // Submit all responses
-  const handleSubmitAllResponses = async () => {
+  const handleSubmitAllResponses = async (responses: Answers) => {
     if (!testId || !writingSection) return;
 
     try {
-      const result = await submitWritingAnswers(testId, taskResponses);
+      const result = await submitWritingAnswers(testId, responses);
       setSubmissionResult(result);
       setSectionComplete(true);
       console.log('Submission result:', result);

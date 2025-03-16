@@ -7,6 +7,7 @@ interface WritingPhaseAreaProps {
   passageTitle: string;
   passageText: string;
   essayText: string;
+  prompt: string;
   onEssayChange: (text: string) => void;
   timeRemaining: number;
   onTimeout: () => void; // Add onTimeout callback prop
@@ -16,6 +17,7 @@ const WritingPhaseArea: React.FC<WritingPhaseAreaProps> = ({
   passageTitle,
   passageText,
   essayText,
+  prompt,
   onEssayChange,
   timeRemaining,
   onTimeout,
@@ -62,7 +64,7 @@ const WritingPhaseArea: React.FC<WritingPhaseAreaProps> = ({
               Writing Task
             </h2>
             <p className="text-gray-700">
-              Summarize the points made in the lecture, explaining how they cast doubt on points made in the reading passage.
+              {prompt}
             </p>
           </div>
 
@@ -70,7 +72,10 @@ const WritingPhaseArea: React.FC<WritingPhaseAreaProps> = ({
           <div className="bg-white rounded-lg shadow-md p-6 flex-grow flex flex-col">
             <TextEditorArea
               value={essayText}
-              onChange={onEssayChange}
+              onChange={(text) => {
+                onEssayChange(text);
+                console.log('well something should have changed!');
+              }}
             />
           </div>
         </div>

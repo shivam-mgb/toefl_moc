@@ -49,7 +49,10 @@ const WritingTaskPage: React.FC<WritingTaskPageProps> = ({ task, taskId, onTaskC
           setTimeRemaining(taskConfig.writingTime);
           setIsPlaying(false);
         } else if (currentPhase === 'writing') {
+          setTimeRemaining(TASK_CONFIGS.independent.writingTime);
           onTaskComplete(taskId, essayText);
+          console.log('does it run after on task complete?');
+          setEssayText('');
         }
       } else if (currentPhase === 'writing') {
         onTaskComplete(taskId, essayText);
@@ -80,9 +83,14 @@ const WritingTaskPage: React.FC<WritingTaskPageProps> = ({ task, taskId, onTaskC
         setTimeRemaining(taskConfig.writingTime);
         setIsPlaying(false);
       } else if (currentPhase === 'writing' && window.confirm('Submit your response?')) {
+        setTimeRemaining(TASK_CONFIGS.independent.writingTime);
         onTaskComplete(taskId, essayText);
+        console.log('does it run after on task complete?');
+        setEssayText('');
       }
     } else if (currentPhase === 'writing' && window.confirm('Submit your response?')) {
+      console.log('this is the text: ', essayText);
+      
       onTaskComplete(taskId, essayText);
     }
   };
@@ -114,8 +122,9 @@ const WritingTaskPage: React.FC<WritingTaskPageProps> = ({ task, taskId, onTaskC
     return (
       <WritingPhaseArea
         passageTitle={task.type === 'integrated' ? 'Integrated Task Response' : 'Independent Task'}
-        passageText={task.type === 'integrated' ? task.passage : task.prompt}
+        passageText={task.passage}
         essayText={essayText}
+        prompt={task.prompt}
         onEssayChange={setEssayText}
         timeRemaining={timeRemaining}
         onTimeout={() => onTaskComplete(taskId, essayText)}
