@@ -511,6 +511,17 @@ def delete_listening_section(section_id):
     db.session.commit()
     return jsonify({'message': 'Section deleted successfully'}), 200
 
+@app.route('/listenings', methods=['GET'])
+def get_listening_sections():
+    sections = Section.query.filter_by(section_type='listening').all()
+    if not sections:
+        return jsonify({'error': 'Section not found'}), 404
+
+    return jsonify({
+        'total': len(sections),
+        'sections': [{'id': section.id, 'title': section.title} for section in sections],
+    }), 200
+
 # Speaking section
 
 @app.route('/speaking', methods=['POST'])
@@ -628,6 +639,17 @@ def delete_speaking_section(section_id):
     db.session.commit()
     return jsonify({'message': 'Section deleted successfully'}), 200
 
+@app.route('/speakings', methods=['GET'])
+def get_speaking_sections():
+    sections = Section.query.filter_by(section_type='speaking').all()
+    if not sections:
+        return jsonify({'error': 'Section not found'}), 404
+
+    return jsonify({
+        'total': len(sections),
+        'sections': [{'id': section.id, 'title': section.title} for section in sections],
+    }), 200
+
 # Writing section
     
 @app.route('/writing', methods=['POST'])
@@ -727,6 +749,17 @@ def delete_writing_section(section_id):
     db.session.delete(section)
     db.session.commit()
     return jsonify({'message': 'Section deleted successfully'}), 200
+
+@app.route('/writings', methods=['GET'])
+def get_writing_sections():
+    sections = Section.query.filter_by(section_type='writing').all()
+    if not sections:
+        return jsonify({'error': 'Section not found'}), 404
+
+    return jsonify({
+        'total': len(sections),
+        'sections': [{'id': section.id, 'title': section.title} for section in sections],
+    }), 200
 
 # Create database tables
 with app.app_context():

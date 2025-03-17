@@ -4,9 +4,9 @@ import TopMenu from '../components/TopMenu';
 
 const sections = [
   { title: "Reading Section", route: "/reading" },
-  { title: "Listening Section", route: "/listening-intro" },
-  { title: "Speaking Section", route: "/speaking-intro" },
-  { title: "Writing Section", route: "/writing-intro" },
+  { title: "Listening Section", route: "/listening" },
+  { title: "Speaking Section", route: "/speaking" },
+  { title: "Writing Section", route: "/writing" },
 ];
 
 const SectionSelectionPage: React.FC = () => {

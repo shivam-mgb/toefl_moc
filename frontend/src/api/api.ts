@@ -20,7 +20,7 @@ import {
   WritingSectionResponse,
   ReadingSectionRequest,
   ReadingSectionResponse,
-  ReadingSections,
+  GetSections,
 } from '../types/types';
 
 // Register a new user
@@ -56,6 +56,7 @@ export async function login(credentials: { email: string; password: string }) {
 }
 
 // API request functions
+// Listening section requests
 export async function createListeningSection(
   data: ListeningSectionRequest,
   audioFiles: File[],
@@ -116,6 +117,23 @@ export async function submitListeningAnswers(sectionId: string, answers: Record<
   return response.json();
 }
 
+export const fetchListeningSections = async (): Promise<GetSections> => {
+  const response = await fetch(`${BASE_URL}/listenings`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch listening sections');
+  }
+
+  return response.json();
+};
+
+
+// Speaking section requests
 export async function createSpeakingSection(
   data: SpeakingSectionRequest,
   task2Audio: File,
@@ -197,6 +215,23 @@ export async function submitSpeakingAnswers(
   return response.json();
 }
 
+export const fetchSpeakingSections = async (): Promise<GetSections> => {
+  const response = await fetch(`${BASE_URL}/speakings`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch speaking sections');
+  }
+
+  return response.json();
+};
+
+
+// Writing section requests
 export async function createWritingSection(
   data: WritingSectionRequest,
   task1Audio: File
@@ -270,6 +305,25 @@ export async function submitWritingAnswers(
   return response.json();
 }
 
+export const fetchWritingSections = async (): Promise<GetSections> => {
+  const response = await fetch(`${BASE_URL}/writings`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch writing sections');
+  }
+
+  return response.json();
+};
+
+
+
+
+// Reading section requests
 export async function createReadingSection(
   data: ReadingSectionRequest
 ): Promise<ReadingSectionResponse> {
@@ -338,7 +392,7 @@ export async function submitReadingAnswers(
   return response.json();
 }
 
-export const fetchReadingSections = async (): Promise<ReadingSections> => {
+export const fetchReadingSections = async (): Promise<GetSections> => {
   const response = await fetch(`${BASE_URL}/readings`, {
     method: 'GET',
     headers: {

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopMenu from '../components/TopMenu';
-import { fetchReadingSections } from '../api/api'; // Adjust path
-import { GetSections } from '../types/types'; // Adjust path
+import { fetchWritingSections } from '../api/api';
+import { GetSections } from '../types/types';
 
-const ReadingSectionsPage: React.FC = () => {
+const WritingSectionsPage: React.FC = () => {
   const navigate = useNavigate();
   const [sections, setSections] = useState<GetSections['sections']>([]);
   const [loading, setLoading] = useState(true);
@@ -13,10 +13,10 @@ const ReadingSectionsPage: React.FC = () => {
   useEffect(() => {
     const loadSections = async () => {
       try {
-        const data = await fetchReadingSections();
+        const data = await fetchWritingSections();
         setSections(data.sections);
       } catch (err) {
-        setError('Error loading reading sections');
+        setError('Error loading writing sections');
       } finally {
         setLoading(false);
       }
@@ -25,29 +25,20 @@ const ReadingSectionsPage: React.FC = () => {
   }, []);
 
   const handleCardClick = (id: number) => {
-    navigate(`/reading-intro/${id}`);
+    navigate(`/writing-intro/${id}`);
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-gray-600">Loading...</p>
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center bg-gray-100"><p className="text-gray-600">Loading...</p></div>;
   }
 
   if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-red-600">{error}</p>
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center bg-gray-100"><p className="text-red-600">{error}</p></div>;
   }
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
-      <TopMenu sectionTitle="Reading Sections" />
-
+      <TopMenu sectionTitle="Writing Sections" />
       <main className="flex-grow container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {sections.map((section) => (
@@ -65,7 +56,6 @@ const ReadingSectionsPage: React.FC = () => {
           ))}
         </div>
       </main>
-
       <footer className="bg-white py-6 border-t border-gray-200">
         <div className="container mx-auto px-4">
           <p className="text-center text-gray-500 text-sm">
@@ -77,4 +67,4 @@ const ReadingSectionsPage: React.FC = () => {
   );
 };
 
-export default ReadingSectionsPage;
+export default WritingSectionsPage;

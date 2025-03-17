@@ -251,7 +251,7 @@ export interface ReadingSectionResponse {
   passages: Passage[];
 }
 
-export interface ReadingSections {
+export interface GetSections {
   total: number;
   sections: {
     id: number;
