@@ -366,6 +366,17 @@ def delete_reading_section(section_id):
     db.session.commit()
     return jsonify({'message': 'Section deleted successfully'}), 200
 
+@app.route('/readings', methods=['GET'])
+def get_reading_sections():
+    sections = Section.query.filter_by(section_type='reading').all()
+    if not sections:
+        return jsonify({'error': 'Section not found'}), 404
+
+    return jsonify({
+        'total': len(sections),
+        'sections': [{'id': section.id, 'title': section.title} for section in sections],
+    }), 200
+
 # Listening section
 
 @app.route('/listening', methods=['POST'])

@@ -250,3 +250,11 @@ export interface ReadingSectionResponse {
   title: string;
   passages: Passage[];
 }
+
+export interface ReadingSections {
+  total: number;
+  sections: {
+    id: number;
+    title: string;
+  }[];
+}

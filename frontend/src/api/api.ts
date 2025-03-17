@@ -1,5 +1,3 @@
-// src/api.ts
-
 // Base URL for the API (adjust as needed, using Vite env variable for flexibility)
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:5000';
 
@@ -22,6 +20,7 @@ import {
   WritingSectionResponse,
   ReadingSectionRequest,
   ReadingSectionResponse,
+  ReadingSections,
 } from '../types/types';
 
 // Register a new user
@@ -338,3 +337,18 @@ export async function submitReadingAnswers(
 
   return response.json();
 }
+
+export const fetchReadingSections = async (): Promise<ReadingSections> => {
+  const response = await fetch(`${BASE_URL}/readings`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch reading sections');
+  }
+
+  return response.json();
+};

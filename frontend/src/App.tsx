@@ -14,6 +14,7 @@ import ReadingSectionPage from './pages/ReadingSectionPage';
 import ListeningSectionPage from './pages/ListeningSectionPage';
 import SpeakingSectionPage from './pages/SpeakingSectionPage';
 import WritingSectionPage from './pages/WritingSectionPage';
+import ReadingSectionsPage from './pages/ReadingSectionsPage';
 import ReviewPage from './pages/ReviewPage';
 import AdminRoutes from './routes/AdminRoutes';
 
@@ -36,6 +37,7 @@ const App: React.FC = () => {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<SectionSelectionPage />} />
+          <Route path='/reading' element={<ReadingSectionsPage />} />
           <Route path='/register' element={<Register />} />
           <Route path='/login' element={<Login />} />
 
