@@ -55,25 +55,27 @@ const ReadingSectionPage: React.FC = () => {
 
   // Handle passage completion
   const handlePassageComplete = (passageId: string, answers: any) => {
-    setPassageAnswers((prevAnswers) => ({ 
-      ...prevAnswers, 
-      [passageId]: answers 
-    }));
+    console.log('hadling the passage update with id: ', passageId, ' and answers: ', answers);
     
-    if (readingSection && currentPassageIndex < readingSection.passages.length - 1) {
-      setCurrentPassageIndex((prev) => prev + 1);
-    } else {
-      // Submit all answers when the last passage is completed
-      handleSubmitAllAnswers();
-    }
+    setPassageAnswers((prevAnswers) => {
+      const updatedResponses = { ...prevAnswers, [passageId]: answers };
+      if (readingSection && currentPassageIndex < readingSection.passages.length - 1) {
+        setCurrentPassageIndex((prev) => prev + 1);
+      } else {
+        // Submit all answers when the last passage is completed
+        handleSubmitAllAnswers(updatedResponses);
+      }
+      return updatedResponses;
+    });
+    
   };
 
   // Handle final submission
-  const handleSubmitAllAnswers = async () => {
+  const handleSubmitAllAnswers = async (passageAnswers: Record<string, any>) => {
     if (!testId || !readingSection) return;
     
     // setSubmitting(true);
-    try {
+    try {      
       const result = await submitReadingAnswers(testId, passageAnswers);
       setSubmissionResult(result);
       setSectionComplete(true);
@@ -91,7 +93,7 @@ const ReadingSectionPage: React.FC = () => {
     if (sectionComplete || sectionTimeRemaining <= 0) {
       if (sectionTimeRemaining <= 0 && !sectionComplete) {
         // Auto-submit when time runs out
-        handleSubmitAllAnswers();
+        handleSubmitAllAnswers(passageAnswers);
       }
       return;
     }
