@@ -115,7 +115,12 @@ const ReadingQuestionPage: React.FC<ReadingQuestionPageProps> = ({ passage, onPa
             </button>
             {areAllQuestionsAnswered ? (
               <button
-                onClick={() => onPassageComplete(passage.id || `p${currentQuestionIndex}`, selectedAnswers)}
+                onClick={() => {
+                  setCurrentQuestionIndex(0);
+                  const answers = selectedAnswers
+                  setSelectedAnswers({});
+                  onPassageComplete(passage.id || `p${currentQuestionIndex}`, answers);
+                }}
                 className="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded"
               >
                 Submit

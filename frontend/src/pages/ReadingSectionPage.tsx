@@ -55,19 +55,20 @@ const ReadingSectionPage: React.FC = () => {
 
   // Handle passage completion
   const handlePassageComplete = (passageId: string, answers: any) => {
-    console.log('hadling the passage update with id: ', passageId, ' and answers: ', answers);
+    console.log('entering handlePassageComplete: ', passageId, answers);
     
-    setPassageAnswers((prevAnswers) => {
-      const updatedResponses = { ...prevAnswers, [passageId]: answers };
-      if (readingSection && currentPassageIndex < readingSection.passages.length - 1) {
-        setCurrentPassageIndex((prev) => prev + 1);
-      } else {
-        // Submit all answers when the last passage is completed
-        handleSubmitAllAnswers(updatedResponses);
-      }
-      return updatedResponses;
-    });
-    
+    setPassageAnswers((prevAnswers) => ({ ...prevAnswers, [passageId]: answers }));
+  
+    // Move to the next passage if it's not the last one and not already moved
+    if (readingSection && currentPassageIndex < readingSection.passages.length - 1) {
+      setCurrentPassageIndex((prev) => {
+        const nextIndex = prev + 1;
+        return nextIndex;
+      });
+    } else if (readingSection && currentPassageIndex === readingSection.passages.length - 1) {
+      // Submit all answers when the last passage is completed
+      handleSubmitAllAnswers({ ...passageAnswers, [passageId]: answers });
+    }
   };
 
   // Handle final submission
