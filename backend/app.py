@@ -53,6 +53,24 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# Simulated token authentication decorator
+def student_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify({'error': 'Token is missing'}), 401
+        try:
+            token = token.split(" ")[1]  # Expecting 'Bearer <token>'
+            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            if not payload.get('role') or payload.get('role') != 'student' :
+                return jsonify({'error': 'Admin privileges required'}), 403
+            student_id = payload['user_id']
+        except Exception:
+            return jsonify({'error': 'Invalid token'}), 401
+        return f(student_id, *args, **kwargs)
+    return decorated
+
 # Helper function to save files and generate URLs
 def save_file(file, subfolder):
     if file:
@@ -76,7 +94,8 @@ def generate_token(user):
 # Database Models
 from models import db, User, Section, ListeningAudio, ReadingPassage, \
                     Question, Option, TableQuestionRow, TableQuestionColumn, \
-                    CorrectAnswer, SpeakingTask, WritingTask, QuestionAudio
+                    CorrectAnswer, SpeakingTask, WritingTask, QuestionAudio, \
+                    UserAnswer
 
 db.init_app(app)
 
@@ -204,12 +223,21 @@ def register():
         return jsonify({'error': 'Username or email already exists'}), 400
 
     # Create new user with role 'student'
-    user = User(username=username, email=email, role='admin') # making the role admin for testing. don't forget to swtich it back to student
+    user = User(username=username, email=email, role='student')
     user.set_password(password)
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({'message': 'User registered successfully'}), 201
+    # return jsonify({'message': 'User registered successfully'}), 201
+    token = generate_token(user)
+    return jsonify({
+            'token': token,
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email
+            }
+        }),
 
 # Login endpoint
 @app.route('/login', methods=['POST'])
@@ -376,6 +404,126 @@ def get_reading_sections():
         'total': len(sections),
         'sections': [{'id': section.id, 'title': section.title} for section in sections],
     }), 200
+
+# Assuming token_required decorator provides student_id
+@app.route('/reading/<int:section_id>/submit', methods=['POST'])
+@student_required
+def submit_reading_answers(student_id, section_id):
+    try:
+        # Parse JSON request body
+        data = request.get_json()
+        if not data or not isinstance(data, dict):
+            return jsonify({'error': 'Invalid request body'}), 400
+        data = data['answers']
+
+        # Step 1: Validate passages belong to the specified section
+        passage_ids = [int(pid) for pid in data.keys()]  # Convert keys to integers
+        passages = db.session.query(ReadingPassage).filter(
+            ReadingPassage.id.in_(passage_ids),
+            ReadingPassage.section_id == section_id
+        ).all()
+
+        if len(passages) != len(passage_ids):
+            return jsonify({'error': 'One or more passage IDs are invalid or do not belong to section'}), 404
+
+        # Step 2: Process and store user answers
+        for passage_id_str, questions in data.items():
+            passage_id = int(passage_id_str)
+            for question_id_str, user_answer_indices in questions.items():
+                question_id = int(question_id_str)
+                # Verify question belongs to the passage
+                question = db.session.query(Question).filter_by(
+                    id=question_id,
+                    reading_passage_id=passage_id
+                ).first()
+                if not question:
+                    return jsonify({'error': f'Question ID {question_id} not in passage {passage_id}'}), 404
+
+                # Get options for the question, ordered by id
+                options = db.session.query(Option).filter_by(
+                    question_id=question_id
+                ).order_by(Option.id).all()
+                option_ids = [opt.id for opt in options]
+
+                # Map user answer indices to option_ids
+                try:
+                    selected_option_ids = []
+                    for idx in user_answer_indices:
+                        if idx.isalpha():
+                            # Convert letter (e.g., "b") to index (e.g., 1)
+                            index = ord(idx.lower()) - ord('a')
+                        else:
+                            index = int(idx)
+                        if 0 <= index < len(option_ids):
+                            selected_option_ids.append(option_ids[index])
+                        else:
+                            return jsonify({'error': f'Invalid option index {idx} for question {question_id}'}), 400
+                except ValueError:
+                    return jsonify({'error': f'Invalid answer format for question {question_id}'}), 400
+
+                # Delete previous answers for this user and question
+                db.session.query(UserAnswer).filter_by(
+                    user_id=student_id,
+                    question_id=question_id
+                ).delete()
+
+                # Insert new user answers
+                for opt_id in selected_option_ids:
+                    user_answer = UserAnswer(
+                        user_id=student_id,
+                        question_id=question_id,
+                        option_id=opt_id
+                    )
+                    db.session.add(user_answer)
+
+        # Commit all changes to the database
+        db.session.commit()
+
+        # Step 3: Calculate the section's score
+        total_score = 0
+        # Get all questions in the section via reading passages
+        questions = (
+            db.session.query(Question, db.func.count(CorrectAnswer.id).label('correct_count'))
+            .outerjoin(CorrectAnswer, Question.id == CorrectAnswer.question_id)
+            .join(ReadingPassage, Question.reading_passage_id == ReadingPassage.id)
+            .filter(ReadingPassage.section_id == section_id)
+            .group_by(Question.id)
+            .all()
+        )
+
+        for question, correct_count in questions:
+            # Determine points based on question type and number of correct answers
+            if question.type in ('prose_summary', 'table') and correct_count > 1:
+                points = 2  # Multiple-selection or table questions
+            else:
+                points = 1  # Default for other types (e.g., 'insert-a-text')
+
+            # Get correct answers
+            correct_option_ids = set(
+                ca.option_id for ca in db.session.query(CorrectAnswer)
+                .filter_by(question_id=question.id)
+                .all()
+            )
+
+            # Get user answers
+            user_option_ids = set(
+                ua.option_id for ua in db.session.query(UserAnswer)
+                .filter_by(question_id=question.id, user_id=student_id)
+                .all()
+            )
+
+            print('correct answers: ', correct_option_ids, '\nuser options: ', user_option_ids)
+
+            # Scoring: all-or-nothing
+            if user_option_ids == correct_option_ids and user_option_ids:
+                total_score += points
+
+        # Step 4: Return the section's score
+        return jsonify({'section_id': section_id, 'score': total_score})
+
+    except Exception as e:
+        db.session.rollback()  # Roll back on error
+        return jsonify({'error': str(e)}), 500
 
 # Listening section
 

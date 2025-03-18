@@ -62,7 +62,7 @@ class Question(db.Model):
     __tablename__ = 'questions'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     section_type = db.Column(db.String(50), nullable=False)
-    type = db.Column(db.String(50), nullable=False)  # e.g., 'multiple-choice', 'table'
+    type = db.Column(db.String(50), nullable=False)  # e.g., 'multiple_to_single', 'multiple_to_multiple', 'table', 'audio', 'insert_text', 'prose_summary'
     prompt = db.Column(db.Text, nullable=False)
     listening_audio_id = db.Column(db.Integer, db.ForeignKey('listening_audios.id'))
     reading_passage_id = db.Column(db.Integer, db.ForeignKey('reading_passages.id'))
@@ -114,6 +114,17 @@ class CorrectAnswer(db.Model):
 
     table_row = db.relationship('TableQuestionRow')
     table_column = db.relationship('TableQuestionColumn')
+    option = db.relationship('Option')
+
+class UserAnswer(db.Model):
+    __tablename__ = 'user_answers'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    question_id = db.Column(db.Integer, db.ForeignKey('questions.id'), nullable=False)
+    option_id = db.Column(db.Integer, db.ForeignKey('options.id'), nullable=False)
+
+    user = db.relationship('User', backref='answers')
+    question = db.relationship('Question', backref='user_answers')
     option = db.relationship('Option')
 
 # Speaking Tasks Model

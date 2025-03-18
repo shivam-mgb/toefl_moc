@@ -201,7 +201,7 @@ const SpeakingSectionPage: React.FC = () => {
         task3Recording: taskRecordings['task3'] ? new File([taskRecordings['task3']], 'task3.webm', { type: 'audio/webm' }) : null,
         task4Recording: taskRecordings['task4'] ? new File([taskRecordings['task4']], 'task4.webm', { type: 'audio/webm' }) : null,
       };
-
+      // instead of putting the task types put the actual ids, that might be more useful for relations
       const result = await submitSpeakingAnswers(testId, recordings as { 
         task1Recording: File; 
         task2Recording: File; 
