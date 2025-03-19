@@ -682,7 +682,6 @@ def submit_listening_answers(student_id, section_id):
         data = request.get_json()
         if not data or not isinstance(data, dict) or 'answers' not in data:
             return jsonify({'error': 'Invalid request body'}), 400
-        print('checkpoint 1')
 
         answers = data['answers']
         if not isinstance(answers, dict):
@@ -694,17 +693,14 @@ def submit_listening_answers(student_id, section_id):
             ListeningAudio.id.in_(audio_ids),
             ListeningAudio.section_id == section_id
         ).all()
-        print('checkpoint 2')
         if len(audios) != len(audio_ids):
             return jsonify({'error': 'One or more audio IDs are invalid or do not belong to this section'}), 404
 
         # **Step 2: Process and Store User Answers**
         for audio_id_str, questions in answers.items():
-            print('loop checkpoint 1')
             audio_id = int(audio_id_str)
             for question_id_str, user_answers in questions.items():
                 question_id = int(question_id_str)
-                print('loop 2 checkpoint 1')
                 # Verify the question belongs to the audio
                 question = db.session.query(Question).filter_by(
                     id=question_id,
@@ -716,7 +712,6 @@ def submit_listening_answers(student_id, section_id):
                 # Fetch all options for the question
                 options = db.session.query(Option).filter_by(question_id=question_id).order_by(Option.id).all()
                 option_map = {chr(97 + i): opt.id for i, opt in enumerate(options)}  # 'a' -> option_id, 'b' -> option_id, etc.
-                print('loop 2 checkpoint 2')
                 # Delete previous answers for this user and question
                 db.session.query(UserAnswer).filter_by(
                     user_id=student_id,
@@ -754,7 +749,7 @@ def submit_listening_answers(student_id, section_id):
                             option_id=option_id
                         )
                         db.session.add(user_answer)
-        print('checkpoint 3')
+
         # Commit all changes to the database
         db.session.commit()
 
@@ -771,9 +766,7 @@ def submit_listening_answers(student_id, section_id):
 
         for question, correct_count in questions:
             # Assign points based on question type and number of correct answers
-            if question.type == 'multiple-choice' and correct_count == 1:
-                points = 1
-            elif question.type in ('multiple-choice', 'table') and correct_count > 1:
+            if question.type in ('prose_summary', 'table') and correct_count > 1:
                 points = 2  # For multiple-selection or table questions
             else:
                 points = 1  # Default case
@@ -791,6 +784,8 @@ def submit_listening_answers(student_id, section_id):
                 .filter_by(question_id=question.id, user_id=student_id)
                 .all()
             )
+
+            print('correct answers: ', correct_option_ids, '\nuser options: ', user_option_ids)
 
             # All-or-nothing scoring
             if user_option_ids == correct_option_ids and user_option_ids:
