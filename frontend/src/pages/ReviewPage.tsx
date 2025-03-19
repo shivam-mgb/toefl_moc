@@ -1,67 +1,27 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import TopMenu from '../components/TopMenu';
 
 interface SectionScore {
   name: string;
   score: number;
   maxScore: number;
-  details?: {
-    category: string;
-    score: number;
-    maxScore: number;
-  }[];
 }
 
 const SECTION_SCORES: SectionScore[] = [
-  {
-    name: 'Reading',
-    score: 25,
-    maxScore: 30,
-    details: [
-      { category: 'Main Ideas', score: 8, maxScore: 10 },
-      { category: 'Details', score: 9, maxScore: 10 },
-      { category: 'Inferences', score: 8, maxScore: 10 }
-    ]
-  },
-  {
-    name: 'Listening',
-    score: 26,
-    maxScore: 30,
-    details: [
-      { category: 'Conversations', score: 13, maxScore: 15 },
-      { category: 'Lectures', score: 13, maxScore: 15 }
-    ]
-  },
-  {
-    name: 'Speaking',
-    score: 24,
-    maxScore: 30,
-    details: [
-      { category: 'Independent Tasks', score: 12, maxScore: 15 },
-      { category: 'Integrated Tasks', score: 12, maxScore: 15 }
-    ]
-  },
-  {
-    name: 'Writing',
-    score: 25,
-    maxScore: 30,
-    details: [
-      { category: 'Integrated Task', score: 13, maxScore: 15 },
-      { category: 'Independent Task', score: 12, maxScore: 15 }
-    ]
-  }
+  { name: 'Reading', score: 25, maxScore: 30 },
+  { name: 'Listening', score: 26, maxScore: 30 },
+  { name: 'Speaking', score: 24, maxScore: 30 },
+  { name: 'Writing', score: 25, maxScore: 30 }
 ];
 
 const ReviewPage: React.FC = () => {
-  // TODO: Get writing content from global state
-  const integratedWritingContent = 'TODO: Get integrated writing content from global state';
-  const independentWritingContent = 'TODO: Get independent writing content from global state';
-
   const totalScore = SECTION_SCORES.reduce((sum, section) => sum + section.score, 0);
   const maxTotalScore = SECTION_SCORES.reduce((sum, section) => sum + section.maxScore, 0);
+  const navigate = useNavigate();
 
   const handleGoToSections = () => {
-    console.log('Navigate to Sections Page');
+    navigate('/');
   };
 
   return (
@@ -96,42 +56,10 @@ const ReviewPage: React.FC = () => {
                 
                 {/* Section Score */}
                 <div className="text-2xl font-bold text-teal-600 mb-4">
-                  {section.score} <span className="text-gray-500">/ {maxTotalScore}</span>
+                  {section.score} <span className="text-gray-500">/ {section.maxScore}</span>
                 </div>
-
-                {/* Score Details */}
-                {section.details && (
-                  <div className="space-y-2 border-t border-gray-200 pt-4">
-                    {section.details.map((detail) => (
-                      <div 
-                        key={detail.category}
-                        className="flex justify-between items-center text-sm"
-                      >
-                        <span className="text-gray-600">{detail.category}</span>
-                        <span className="font-medium">
-                          {detail.score}/{detail.maxScore}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             ))}
-          </div>
-
-          {/* Writing Content */}
-          <div className="bg-white rounded-lg shadow-md p-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Writing Section Review</h2>
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">Integrated Writing</h3>
-                <p className="text-gray-700">{integratedWritingContent}</p>
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">Independent Writing</h3>
-                <p className="text-gray-700">{independentWritingContent}</p>
-              </div>
-            </div>
           </div>
 
           {/* Navigation */}

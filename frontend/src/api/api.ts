@@ -107,7 +107,10 @@ export async function getListeningSection(sectionId: string): Promise<ListeningS
 export async function submitListeningAnswers(sectionId: string, answers: Record<string, any>) {
   const response = await fetch(`${BASE_URL}/listening/${sectionId}/submit`, {
     method: 'POST',
-    headers: getAuthHeaders(),
+    headers: {
+      ...getAuthHeaders(),
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify({ answers }),
   });
   if (!response.ok) {
@@ -203,7 +206,10 @@ export async function submitSpeakingAnswers(
   
   const response = await fetch(`${BASE_URL}/speaking/${testId}/submit`, {
     method: 'POST',
-    headers: getAuthHeaders(),
+    headers: {
+      ...getAuthHeaders(),
+      'Content-Type': 'application/json',
+    },
     body: formData,
   });
   
