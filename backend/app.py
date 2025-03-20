@@ -127,13 +127,13 @@ def create_question(question_data, section_type, reading_passage_id=None, listen
             )
             db.session.add(question_audio)
         
-        elif question.type == 'insert_text':
+        if question.type == 'insert_text':
             options = ['a','b','c','d']
         else:
             options = question_data['options']
 
         if question.type in ['insert_text', 'multiple_to_single', 'audio']:
-            corrects = question_data['correct_answer'] # single correct answer (with no s)
+            corrects = [question_data['correct_answer']]
         else:
             corrects = question_data['correct_answers']
 
