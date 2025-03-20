@@ -38,25 +38,17 @@ const TableQuestionInput: React.FC<TableQuestionInputProps> = ({ onChange }) => 
 
   // Toggle a row-column pair as correct
   const toggleSelection = (row: string, column: string) => {
-    console.log('Toggling selection: ', row, column);
-    console.log('Current selections: ', correctSelections);
-    let go = false;
     setCorrectSelections((prev) => {
       const exists = prev.some((sel) => sel.row === row && sel.column === column);
       if (exists) {
         return prev.filter((sel) => !(sel.row === row && sel.column === column));
       } else {
-        go = true;
         return [...prev, { row, column }];
       }
     });
-    console.log('Toggling selection: ', row, column);
-    console.log('Current selections: ', correctSelections);
   };
 
   const handleChange = (prompt: string, rows: string[], columns: string[], correctSelections: { row: string; column: string }[]) => {
-    console.log('handle change: ', rows, columns);
-    console.log('Current selections: ', correctSelections);
     onChange({ 
       prompt,
       rows, 
