@@ -15,8 +15,8 @@ const TableCompletionQuestion: React.FC<TableCompletionQuestionProps> = ({
     answers = {}, // Default to empty object if undefined
     onAnswerChange,
 }) => {
-    const columnHeaders = initialColumnHeaders.slice(0, 3);
-    const rowHeaders = initialRowHeaders.slice(0, 3);
+    const columnHeaders = initialColumnHeaders.slice(0, 5);
+    const rowHeaders = initialRowHeaders.slice(0, 5);
 
     // Helper function to safely check if a checkbox is checked
     const isChecked = (rowIndex: number, colIndex: number): boolean => {
