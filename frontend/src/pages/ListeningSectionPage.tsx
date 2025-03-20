@@ -65,12 +65,12 @@ const ListeningSectionPage: React.FC = () => {
       setCurrentAudioIndex((prev) => prev + 1);
       setQuestionPageKey(prev => prev + 1); // Increment key to force remount
     } else {
-      handleSubmitAllAnswers();
+      handleSubmitAllAnswers({ ...audioAnswers, [audioId]: answers,});
     }
   };
 
   // Submit all answers
-  const handleSubmitAllAnswers = async () => {
+  const handleSubmitAllAnswers = async (audioAnswers: Record<string, any>) => {
     if (!testId || !listeningSection) return;
 
     try {
@@ -88,7 +88,7 @@ const ListeningSectionPage: React.FC = () => {
   useEffect(() => {
     if (sectionComplete || sectionTimeRemaining <= 0) {
       if (sectionTimeRemaining <= 0 && !sectionComplete) {
-        handleSubmitAllAnswers();
+        handleSubmitAllAnswers(audioAnswers);
       }
       return;
     }
