@@ -721,10 +721,15 @@ def submit_listening_answers(student_id, section_id):
                 if question.type == 'table':
                     # Process table question answers
                     for row_id_str, columns in user_answers.items():
+                        # implementing a translation but in the future it would be better just to pass the row ids from the front-end
                         row_id = int(row_id_str)
+                        rows = TableQuestionRow.query.filter_by(question_id=question_id).all()
+                        row_id = rows[row_id].id
                         for col_id_str, selected in columns.items():
                             if selected:  # True indicates the cell is selected
                                 col_id = int(col_id_str)
+                                columns = TableQuestionColumn.query.filter_by(question_id=question_id).all()
+                                col_id = columns[col_id].id
                                 user_answer = UserAnswer(
                                     user_id=student_id,
                                     question_id=question_id,
@@ -771,19 +776,30 @@ def submit_listening_answers(student_id, section_id):
             else:
                 points = 1  # Default case
 
-            # Get correct answers
-            correct_option_ids = set(
-                ca.option_id for ca in db.session.query(CorrectAnswer)
-                .filter_by(question_id=question.id)
-                .all()
-            )
+            # Get correct and user answers
+            if question.type == 'table':
+                user_option_ids = set()
+                for ua in db.session.query(UserAnswer) \
+                        .filter_by(question_id=question.id, user_id=student_id) \
+                        .all():
+                    user_option_ids.add((ua.table_row_id, ua.table_column_id))
 
-            # Get user answers
-            user_option_ids = set(
-                ua.option_id for ua in db.session.query(UserAnswer)
-                .filter_by(question_id=question.id, user_id=student_id)
-                .all()
-            )
+                correct_option_ids = set()
+                for ca in db.session.query(CorrectAnswer) \
+                        .filter_by(question_id=question.id) \
+                        .all():
+                    correct_option_ids.add((ca.table_row_id, ca.table_column_id))
+            else:
+                user_option_ids = set(
+                    ua.option_id for ua in db.session.query(UserAnswer)
+                    .filter_by(question_id=question.id, user_id=student_id)
+                    .all()
+                )
+                correct_option_ids = set(
+                    ca.option_id for ca in db.session.query(CorrectAnswer)
+                    .filter_by(question_id=question.id)
+                    .all()
+                )
 
             print('correct answers: ', correct_option_ids, '\nuser options: ', user_option_ids)
 
