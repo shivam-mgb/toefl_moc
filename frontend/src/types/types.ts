@@ -194,6 +194,12 @@ export interface SpeakingSectionResponse {
   task4: { audio_url: string; prompt: string };
 }
 
+export interface SpeakingSectionReview {
+  score: number;
+  response_urls: string[];
+  feedback: string;
+}
+
 // Writing Section Interfaces
 export interface WritingTask1 extends Task2 {}
 

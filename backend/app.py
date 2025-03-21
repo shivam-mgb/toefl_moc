@@ -95,7 +95,7 @@ def generate_token(user):
 from models import db, User, Section, ListeningAudio, ReadingPassage, \
                     Question, Option, TableQuestionRow, TableQuestionColumn, \
                     CorrectAnswer, SpeakingTask, WritingTask, QuestionAudio, \
-                    UserAnswer
+                    UserAnswer, SpeakingResponse, WritingResponse, Score
 
 db.init_app(app)
 
@@ -944,6 +944,175 @@ def get_speaking_sections():
         'total': len(sections),
         'sections': [{'id': section.id, 'title': section.title} for section in sections],
     }), 200
+
+@app.route('/speaking/<int:section_id>/submit', methods=['POST'])
+@student_required
+def submit_speaking_answers(student_id, section_id):
+    """Submit speaking answers for a given section."""
+    # Verify the section exists and is a speaking section
+    section = db.session.query(Section).filter_by(id=section_id, section_type='speaking').first()
+    if not section:
+        return jsonify({'error': 'Section not found or not a speaking section'}), 404
+
+    # Define expected task numbers
+    task_numbers = [1, 2, 3, 4]
+
+    # Check if all required recording files are present
+    for num in task_numbers:
+        field_name = f'task{num}Recording'
+        if field_name not in request.files:
+            return jsonify({'error': f'Missing {field_name}'}), 400
+
+    # Process each recording
+    for num in task_numbers:
+        # Find the corresponding task
+        task = db.session.query(SpeakingTask).filter_by(section_id=section_id, task_number=num).first()
+        if not task:
+            return jsonify({'error': f'Speaking task {num} not found for this section'}), 404
+
+        # Get the uploaded file
+        file = request.files[f'task{num}Recording']
+        if file.filename == '':
+            return jsonify({'error': f'No selected file for task {num}'}), 400
+        
+        # Delete previous response audios for this user and task
+        prev_response = SpeakingResponse.query.filter_by(task_id=task.id, user_id=student_id).first()
+        if prev_response:
+            os.remove(prev_response.audio_url.lstrip('/'))
+            db.session.delete(prev_response)
+
+        # Save the file and get its URL/path
+        audio_url = save_file(file, 'speaking_responses')
+
+        # Store the response in the database
+        response = SpeakingResponse(
+            user_id=student_id,
+            task_id=task.id,
+            audio_url=audio_url
+        )
+        db.session.add(response)
+
+    # Commit all changes
+    db.session.commit()
+    return jsonify({'message': 'Speaking answers submitted successfully'}), 200
+
+@app.route('/speaking/<int:section_id>/review', methods=['GET'])
+@student_required
+def review_speaking_section(student_id, section_id):
+    try:
+        # Verify the section exists and is a speaking section
+        section = db.session.query(Section).filter_by(id=section_id, section_type='speaking').first()
+        if not section:
+            return jsonify({'error': 'Speaking section not found'}), 404
+
+        # Query submitted responses for the user in this section
+        responses = db.session.query(SpeakingResponse).filter(
+            SpeakingResponse.user_id == student_id,
+            SpeakingResponse.task.has(section_id=section_id)
+        ).order_by(
+            SpeakingResponse.task.task_number
+        ).all()
+
+        # If no responses are found, return "data doesn't exist"
+        if not responses:
+            return jsonify({'message': "Data doesn't exist"}), 404
+
+        # Build the response list with only submitted responses
+        result = [
+            {
+                'task_id': row.task_id,
+                'task_number': row.task_number,
+                'audio_url': row.audio_url,
+                'score': float(row.score) if row.score is not None else None,  # Convert Numeric to float for JSON
+                'feedback': row.feedback if row.feedback is not None else None
+            }
+            for row in responses
+        ]
+
+        # Return the JSON response
+        return jsonify({
+            'section_id': section_id,
+            'tasks': result
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+@app.route('/speaking/<int:section_id>/review', methods=['POST'])
+@admin_required
+def submit_speaking_review(current_user_id, section_id):
+    try:
+        # Validate that the section exists and is a speaking section
+        section = db.session.query(Section).filter_by(id=section_id, section_type='speaking').first()
+        if not section:
+            return jsonify({'error': 'Speaking section not found'}), 404
+
+        # Check if the user is authorized (teacher or admin)
+        reviewer = db.session.query(User).filter_by(id=current_user_id).first()
+        if reviewer.role not in ['teacher', 'admin']:
+            return jsonify({'error': 'Unauthorized to submit reviews'}), 403
+
+        # Get the JSON data from the request
+        data = request.get_json()
+        if not isinstance(data, list):
+            return jsonify({'error': 'Invalid input: Expected a list of task reviews'}), 400
+
+        # Fetch all speaking tasks in this section
+        speaking_tasks = db.session.query(SpeakingTask).filter_by(section_id=section_id).all()
+        task_ids = {task.id for task in speaking_tasks}
+
+        # Ensure reviews are submitted for all speaking tasks
+        submitted_task_ids = {item['task_id'] for item in data}
+        if submitted_task_ids != task_ids:
+            return jsonify({'error': 'Must submit reviews for all speaking tasks in the section'}), 400
+
+        # Process each review
+        for item in data:
+            task_id = item.get('task_id')
+            score_value = item.get('score')
+            feedback = item.get('feedback')
+
+            # Validate the input
+            if not isinstance(task_id, int) or task_id not in task_ids:
+                return jsonify({'error': f'Invalid task_id: {task_id}'}), 400
+            if not isinstance(score_value, (int, float)) or score_value < 0 or score_value > 10:
+                return jsonify({'error': f'Invalid score for task {task_id}: Must be between 0 and 10'}), 400
+            if not isinstance(feedback, str) or not feedback.strip():
+                return jsonify({'error': f'Invalid feedback for task {task_id}: Must be a non-empty string'}), 400
+
+            # Check for an existing speaking response
+            response = db.session.query(SpeakingResponse).filter_by(task_id=task_id).first()
+            if not response:
+                return jsonify({'error': f'No speaking response found for task {task_id}'}), 404
+
+            # Update or create the review
+            existing_score = db.session.query(Score).filter_by(
+                response_id=response.id,
+                response_type='speaking'
+            ).first()
+            if existing_score:
+                existing_score.score = score_value
+                existing_score.feedback = feedback
+                existing_score.scored_by = current_user_id
+            else:
+                new_score = Score(
+                    response_id=response.id,
+                    response_type='speaking',
+                    score=score_value,
+                    feedback=feedback,
+                    scored_by=current_user_id
+                )
+                db.session.add(new_score)
+
+        # Save all changes
+        db.session.commit()
+        return jsonify({'message': 'Speaking reviews submitted successfully'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
 
 # Writing section
     

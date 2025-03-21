@@ -21,6 +21,7 @@ import {
   ReadingSectionRequest,
   ReadingSectionResponse,
   GetSections,
+  SpeakingSectionReview,
 } from '../types/types';
 
 // Register a new user
@@ -225,6 +226,22 @@ export const fetchSpeakingSections = async (): Promise<GetSections> => {
   const response = await fetch(`${BASE_URL}/speakings`, {
     method: 'GET',
     headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch speaking sections');
+  }
+
+  return response.json();
+};
+
+export const fetchSpeakingSectionResponse = async (sectionId: string): Promise<SpeakingSectionReview> => {
+  const response = await fetch(`${BASE_URL}/speakings/${sectionId}/review`, {
+    method: 'GET',
+    headers: {
+      ...getAuthHeaders(),
       'Content-Type': 'application/json',
     },
   });
