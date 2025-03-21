@@ -45,7 +45,7 @@ const AudioQuestionInput: React.FC<AudioQuestionInputProps> = ({ onChange }) => 
           onChange={(e) => {
             const fl = e.target.files?.[0] || null;
             setSnippetFile(fl);
-            handleChange(prompt, snippetFile, options, correctAnswer);
+            handleChange(prompt, fl, options, correctAnswer);
           }}
           className="w-full"
         />
@@ -67,7 +67,7 @@ const AudioQuestionInput: React.FC<AudioQuestionInputProps> = ({ onChange }) => 
         value={correctAnswer}
         onChange={(e) => {
           setCorrectAnswer(e.target.value);
-          handleChange( prompt, snippetFile, options, correctAnswer );
+          handleChange( prompt, snippetFile, options, e.target.value);
         }}
         className="w-full p-2 border rounded-md"
       >
