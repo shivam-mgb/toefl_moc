@@ -194,10 +194,17 @@ export interface SpeakingSectionResponse {
   task4: { audio_url: string; prompt: string };
 }
 
+interface SpeakingTask {
+  task_id: number;
+  task_number: number;
+  audio_url: string;
+  score: number | null;
+  feedback: string | null;
+}
+
 export interface SpeakingSectionReview {
-  score: number;
-  response_urls: string[];
-  feedback: string;
+  section_id: string;
+  tasks: SpeakingTask[];
 }
 
 // Writing Section Interfaces

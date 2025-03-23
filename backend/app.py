@@ -1081,7 +1081,7 @@ def submit_speaking_review(current_user_id, section_id):
                 return jsonify({'error': f'Invalid feedback for task {task_id}: Must be a non-empty string'}), 400
 
             # Check for an existing speaking response
-            response = db.session.query(SpeakingResponse).filter_by(task_id=task_id).first()
+            response = SpeakingResponse.query().filter_by(task_id=task_id).first()
             if not response:
                 return jsonify({'error': f'No speaking response found for task {task_id}'}), 404
 

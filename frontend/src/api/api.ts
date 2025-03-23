@@ -207,10 +207,7 @@ export async function submitSpeakingAnswers(
   
   const response = await fetch(`${BASE_URL}/speaking/${testId}/submit`, {
     method: 'POST',
-    headers: {
-      ...getAuthHeaders(),
-      'Content-Type': 'application/json',
-    },
+    headers: getAuthHeaders(),
     body: formData,
   });
   
