@@ -1,5 +1,10 @@
 // src/types.ts
 
+export function returnUrlOfAudio(src: string){
+  const pretext = 'http://127.0.0.1:5000/files'
+  return pretext + src
+}
+
 // Base Question Interface
 export interface BaseQuestion {
   id?: string; // Optional, added by backend

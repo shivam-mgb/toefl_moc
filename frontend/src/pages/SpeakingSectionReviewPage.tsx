@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import AudioPlayerSimple from '../components/AudioPlayerSimple';
 import { useParams } from 'react-router-dom';
 import { fetchSpeakingSectionResponse } from '../api/api';
-import { SpeakingSectionReview as SpeakingResponse } from '../types/types';
+import { SpeakingSectionReview as SpeakingResponse, returnUrlOfAudio } from '../types/types';
 
 
 const SpeakingSectionReviewPage: React.FC = () => {
@@ -57,7 +58,7 @@ const SpeakingSectionReviewPage: React.FC = () => {
                     <div key={task.task_id} className="bg-white p-6 rounded-lg shadow">
                         <h3 className="text-xl font-semibold mb-4">Task {task.task_number}</h3>
 
-                        {/* Audio Playback Section */}
+                        {/* Audio Playback Section
                         <section className="mb-4">
                             <h4 className="text-md font-semibold mb-2">Audio Response</h4>
                             <div className="flex items-center gap-4">
@@ -72,8 +73,10 @@ const SpeakingSectionReviewPage: React.FC = () => {
                                     Download
                                 </a>
                             </div>
-                        </section>
+                        </section> */}
 
+                        <AudioPlayerSimple src={returnUrlOfAudio(task.audio_url)} />
+                        
                         {/* Score Section */}
                         <section className="mb-4">
                             <h4 className="text-md font-semibold mb-2">Score</h4>

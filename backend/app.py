@@ -1032,9 +1032,9 @@ def review_speaking_section(student_id, section_id):
        
         result = [
             {
-                'task_id': response.task.id,
+                'task_id': response.task_id,
                 'task_number': response.task.task_number,
-                'audio_url': response.task.audio_url,
+                'audio_url': response.audio_url,
                 'score': float(score.score) if score and score.score is not None else None,
                 'feedback': score.feedback if score and score.feedback is not None else None
             }
