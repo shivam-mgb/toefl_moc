@@ -1001,32 +1001,44 @@ def submit_speaking_answers(student_id, section_id):
 def review_speaking_section(student_id, section_id):
     try:
         # Verify the section exists and is a speaking section
-        section = db.session.query(Section).filter_by(id=section_id, section_type='speaking').first()
+        section = Section.query.filter_by(id=section_id, section_type='speaking').first()
         if not section:
             return jsonify({'error': 'Speaking section not found'}), 404
-
+        
         # Query submitted responses for the user in this section
-        responses = db.session.query(SpeakingResponse).filter(
+        # responses = SpeakingResponse.query.filter(
+        #     SpeakingResponse.user_id == student_id,
+        #     SpeakingResponse.task.has(section_id=section_id)
+        # ).order_by(
+        #     SpeakingResponse.task.task_number
+        # ).all()
+        responses = db.session.query(SpeakingResponse, Score)\
+        .join(SpeakingResponse.task)\
+        .outerjoin(Score, Score.response_id == SpeakingResponse.id)\
+        .filter(
             SpeakingResponse.user_id == student_id,
-            SpeakingResponse.task.has(section_id=section_id)
-        ).order_by(
-            SpeakingResponse.task.task_number
-        ).all()
+            SpeakingTask.section_id == section_id
+        )\
+        .order_by(
+            SpeakingTask.task_number
+        )\
+        .all()
+
 
         # If no responses are found, return "data doesn't exist"
         if not responses:
             return jsonify({'message': "Data doesn't exist"}), 404
-
-        # Build the response list with only submitted responses
+        
+       
         result = [
             {
-                'task_id': row.task_id,
-                'task_number': row.task_number,
-                'audio_url': row.audio_url,
-                'score': float(row.score) if row.score is not None else None,  # Convert Numeric to float for JSON
-                'feedback': row.feedback if row.feedback is not None else None
+                'task_id': response.task.id,
+                'task_number': response.task.task_number,
+                'audio_url': response.task.audio_url,
+                'score': float(score.score) if score and score.score is not None else None,
+                'feedback': score.feedback if score and score.feedback is not None else None
             }
-            for row in responses
+            for response, score in responses
         ]
 
         # Return the JSON response

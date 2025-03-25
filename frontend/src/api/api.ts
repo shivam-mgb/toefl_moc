@@ -235,7 +235,7 @@ export const fetchSpeakingSections = async (): Promise<GetSections> => {
 };
 
 export const fetchSpeakingSectionResponse = async (sectionId: string): Promise<SpeakingSectionReview> => {
-  const response = await fetch(`${BASE_URL}/speakings/${sectionId}/review`, {
+  const response = await fetch(`${BASE_URL}/speaking/${sectionId}/review`, {
     method: 'GET',
     headers: {
       ...getAuthHeaders(),

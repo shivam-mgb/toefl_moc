@@ -19,6 +19,7 @@ import ListeningSectionsPage from './pages/ListenigSectionsPage';
 import SpeakingSectionsPage from './pages/SpeakingSectionsPage';
 import WritingSectionsPage from './pages/WritingSectionsPage';
 import ReviewPage from './pages/ReviewPage';
+import SpeakingSectionReviewPage from './pages/SpeakingSectionReviewPage';
 import AdminRoutes from './routes/AdminRoutes';
 
 import AddReadingSectionPage from './pages/admin/reading/AddReadingSectionPage';
@@ -56,6 +57,7 @@ const App: React.FC = () => {
           <Route path="/speaking/:testId" element={<SpeakingSectionPage />} />
           <Route path="/writing/:testId" element={<WritingSectionPage />} />
           <Route path="/review" element={<ReviewPage />} />
+          <Route path='/review/speaking/:secId' element={<SpeakingSectionReviewPage />} />
 
           {/* minimal section pages */}
           <Route path="/add-reading-section" element={<AddReadingSectionPage />} />
