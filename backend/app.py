@@ -53,6 +53,25 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def admin_required_with_id(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify({'error': 'Missing token'}), 401
+        try:
+            token = token.split(" ")[1]  # Expecting 'Bearer <token>'
+            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            if not payload.get('role') or payload.get('role') != 'admin' :
+                return jsonify({'error': 'Admin privileges required'}), 403
+            admin_id = payload['user_id']
+        except jwt.ExpiredSignatureError:
+            return jsonify({'error': 'Token expired'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'Invalid token'}), 401
+        return f(admin_id, *args, **kwargs)
+    return decorated_function
+
 
 def student_required(f):
     @wraps(f)
@@ -1049,6 +1068,7 @@ def review_speaking_section(user_id, student_id, section_id):
        
         result = [
             {
+                'response_id': response.id,
                 'task_id': response.task_id,
                 'task_number': response.task.task_number,
                 'audio_url': response.audio_url,
@@ -1066,9 +1086,9 @@ def review_speaking_section(user_id, student_id, section_id):
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    
+
 @app.route('/speaking/<int:section_id>/review', methods=['POST'])
-@admin_required
+@admin_required_with_id
 def submit_speaking_review(current_user_id, section_id):
     try:
         # Validate that the section exists and is a speaking section
@@ -1097,11 +1117,14 @@ def submit_speaking_review(current_user_id, section_id):
 
         # Process each review
         for item in data:
+            response_id = item.get('response_id')
             task_id = item.get('task_id')
             score_value = item.get('score')
             feedback = item.get('feedback')
 
             # Validate the input
+            if not isinstance(response_id, int):
+                return jsonify({'error': f'Invalid response_id: {response_id}'}), 400
             if not isinstance(task_id, int) or task_id not in task_ids:
                 return jsonify({'error': f'Invalid task_id: {task_id}'}), 400
             if not isinstance(score_value, (int, float)) or score_value < 0 or score_value > 10:
@@ -1110,7 +1133,7 @@ def submit_speaking_review(current_user_id, section_id):
                 return jsonify({'error': f'Invalid feedback for task {task_id}: Must be a non-empty string'}), 400
 
             # Check for an existing speaking response
-            response = SpeakingResponse.query().filter_by(task_id=task_id).first()
+            response = SpeakingResponse.query.get(response_id)
             if not response:
                 return jsonify({'error': f'No speaking response found for task {task_id}'}), 404
 

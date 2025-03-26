@@ -250,6 +250,23 @@ export const fetchSpeakingSectionResponse = async (sectionId: string, student_id
   return response.json();
 };
 
+export const createSpeakingSectionFeedback = async (sectionId: string, submitData: any): Promise<SpeakingSectionReview> => {
+  const response = await fetch(`${BASE_URL}/speaking/${sectionId}/review`, {
+    method: 'POST',
+    headers: {
+      ...getAuthHeaders(),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(submitData),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch speaking sections');
+  }
+
+  return response.json();
+};
+
 
 // Writing section requests
 export async function createWritingSection(

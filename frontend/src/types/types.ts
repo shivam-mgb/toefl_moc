@@ -200,11 +200,19 @@ export interface SpeakingSectionResponse {
 }
 
 interface SpeakingTask {
+  response_id: number;
   task_id: number;
   task_number: number;
   audio_url: string;
   score: number | null;
   feedback: string | null;
+}
+
+export interface SpeakingFeedback {
+  response_id: number;
+  task_id: number;
+  score: number | null;
+  feedback: string;
 }
 
 export interface SpeakingSectionReview {

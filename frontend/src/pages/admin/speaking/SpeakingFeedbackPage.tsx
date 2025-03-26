@@ -2,19 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import AudioPlayerSimple from '../../../components/AudioPlayerSimple';
-import { fetchSpeakingSectionResponse } from '../../../api/api';
-import { SpeakingSectionReview as SpeakingResponse, returnUrlOfAudio } from '../../../types/types';
+import { fetchSpeakingSectionResponse, createSpeakingSectionFeedback } from '../../../api/api';
+import { SpeakingSectionReview as SpeakingResponse, SpeakingFeedback, returnUrlOfAudio } from '../../../types/types';
 
 const SpeakingFeedbackPage: React.FC = () => {
-  const { secId, studentId } = useParams<{ secId: string, studentId: string }>();
+  const { secId, studentId } = useParams<{ secId: string; studentId: string }>();
   const [response, setResponse] = useState<SpeakingResponse | null>(null);
+  const [reviews, setReviews] = useState<Array<SpeakingFeedback>>([]);
   const [loading, setLoading] = useState(true);
-  const [reviews, setReviews] = useState<Array<{
-    task_id: number;
-    score: number | null;
-    feedback: string;
-  }>>([]);
-  
+
   useEffect(() => {
     const fetchResponse = async () => {
       try {
@@ -22,6 +18,7 @@ const SpeakingFeedbackPage: React.FC = () => {
         setResponse(res);
         // Initialize reviews with existing data or empty values
         setReviews(res.tasks.map(task => ({
+          response_id: task.response_id,
           task_id: task.task_id,
           score: task.score || null,
           feedback: task.feedback || ''
@@ -34,7 +31,7 @@ const SpeakingFeedbackPage: React.FC = () => {
     };
 
     fetchResponse();
-  }, [secId]);
+  }, [secId, studentId]);
 
   const handleScoreChange = (taskId: number, value: string) => {
     const numValue = value === '' ? null : Number(value);
@@ -55,22 +52,38 @@ const SpeakingFeedbackPage: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch(`/api/speaking/review/${secId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(reviews),
-      });
+      const submitData = reviews.map(review => ({
+        response_id: review.response_id,
+        task_id: review.task_id,
+        score: review.score,
+        feedback: review.feedback
+      }));
 
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
+      const res = await createSpeakingSectionFeedback(secId!, submitData);
+
+      console.log('the submission was successfull: ', res);
+      alert('Reviews submitted successfully!');      
+
+      // Update the response state with submitted values
+      // setResponse(prev => {
+      //   if (!prev) return prev;
+      //   return {
+      //     ...prev,
+      //     tasks: prev.tasks.map(task => {
+      //       const review = reviews.find(r => r.task_id === task.task_id);
+      //       return {
+      //         ...task,
+      //         score: review?.score ?? task.score,
+      //         feedback: review?.feedback ?? task.feedback
+      //       };
+      //     })
+      //   };
+      // });
 
       alert('Reviews submitted successfully!');
     } catch (error) {
       console.error('Error submitting reviews:', error);
-      alert('Failed to submit reviews: ' + error);
+      alert(`Failed to submit reviews: ${error}`);
     }
   };
 
@@ -103,7 +116,7 @@ const SpeakingFeedbackPage: React.FC = () => {
                 min="0"
                 max="10"
                 step="0.1"
-                value={reviews[index].score ?? ''}
+                value={reviews[index]?.score ?? ''}
                 onChange={(e) => handleScoreChange(task.task_id, e.target.value)}
                 className="w-24 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="0-10"
@@ -114,7 +127,7 @@ const SpeakingFeedbackPage: React.FC = () => {
             <section>
               <label className="block text-md font-semibold mb-2">Feedback</label>
               <textarea
-                value={reviews[index].feedback}
+                value={reviews[index]?.feedback || ''}
                 onChange={(e) => handleFeedbackChange(task.task_id, e.target.value)}
                 className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={4}
