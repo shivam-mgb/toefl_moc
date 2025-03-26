@@ -27,6 +27,8 @@ import AddListeningSection from './pages/admin/listening/AddListeningSection';
 import AddSpeakingSection from './pages/admin/speaking/AddSpeakingSection';
 import AddWritingSection from './pages/admin/writing/AddWritingSection';
 
+import SpeakingFeedbackPage from './pages/admin/speaking/SpeakingFeedbackPage';
+
 import TestingPage from './pages/testingPage';
 
 // CSS imports
@@ -58,6 +60,8 @@ const App: React.FC = () => {
           <Route path="/writing/:testId" element={<WritingSectionPage />} />
           <Route path="/review" element={<ReviewPage />} />
           <Route path='/review/speaking/:secId' element={<SpeakingSectionReviewPage />} />
+          <Route path='/review/speaking/:secId/feedback/:studentId' element={<SpeakingFeedbackPage />} />
+          
 
           {/* minimal section pages */}
           <Route path="/add-reading-section" element={<AddReadingSectionPage />} />

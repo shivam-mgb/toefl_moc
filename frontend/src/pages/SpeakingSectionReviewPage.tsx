@@ -58,23 +58,6 @@ const SpeakingSectionReviewPage: React.FC = () => {
                     <div key={task.task_id} className="bg-white p-6 rounded-lg shadow">
                         <h3 className="text-xl font-semibold mb-4">Task {task.task_number}</h3>
 
-                        {/* Audio Playback Section
-                        <section className="mb-4">
-                            <h4 className="text-md font-semibold mb-2">Audio Response</h4>
-                            <div className="flex items-center gap-4">
-                                <audio controls src={task.audio_url} className="flex-1">
-                                    Your browser does not support the audio element.
-                                </audio>
-                                <a
-                                    href={task.audio_url}
-                                    download
-                                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                                >
-                                    Download
-                                </a>
-                            </div>
-                        </section> */}
-
                         <AudioPlayerSimple src={returnUrlOfAudio(task.audio_url)} />
                         
                         {/* Score Section */}

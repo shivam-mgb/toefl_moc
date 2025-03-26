@@ -5,12 +5,6 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import AdminDashboard from '../pages/admin/AdminDashboard';
 
 
-// Speaking Pages
-import SpeakingTasksOverview from '../pages/admin/speaking/SpeakingTasksOverview';
-import SpeakingPromptsList from '../pages/admin/speaking/SpeakingPromptsList';
-import AddSpeakingPrompt from '../pages/admin/speaking/AddSpeakingPrompt';
-import EditSpeakingPrompt from '../pages/admin/speaking/EditSpeakingPrompt';
-
 // Writing Pages
 import WritingTasksOverview from '../pages/admin/writing/WritingTasksOverview';
 import IntegratedPromptsList from '../pages/admin/writing/IntegratedPromptsList';
@@ -42,10 +36,6 @@ const AdminRoutes: React.FC = () => {
 
       {/* Speaking Section */}
       <Route path="/speaking" element={<Navigate to="/admin/speaking/overview" replace />} />
-      <Route path="/speaking/overview" element={<SpeakingTasksOverview />} />
-      <Route path="/speaking/prompts" element={<SpeakingPromptsList />} />
-      <Route path="/speaking/prompts/add/:taskType" element={<AddSpeakingPrompt />} />
-      <Route path="/speaking/prompts/:id/edit" element={<EditSpeakingPrompt />} />
 
       {/* Writing Section */}
       <Route path="/writing" element={<Navigate to="/admin/writing/overview" replace />} />

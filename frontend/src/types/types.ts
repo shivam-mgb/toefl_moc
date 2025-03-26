@@ -1,6 +1,6 @@
 // src/types.ts
 
-export function returnUrlOfAudio(src: string){
+export function returnUrlOfAudio(src: string): string{
   const pretext = 'http://127.0.0.1:5000/files'
   return pretext + src
 }

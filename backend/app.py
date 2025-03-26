@@ -34,7 +34,7 @@ for folder in folders:
     if not os.path.exists(path):
         os.makedirs(path)
 
-# JWT authentication decorator
+
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -53,7 +53,7 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# Simulated token authentication decorator
+
 def student_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -70,6 +70,22 @@ def student_required(f):
             return jsonify({'error': 'Invalid token'}), 401
         return f(student_id, *args, **kwargs)
     return decorated
+
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify({'error': 'Token is missing'}), 401
+        try:
+            token = token.split(" ")[1]  # Expecting 'Bearer <token>'
+            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            user_id = payload['user_id']
+        except Exception:
+            return jsonify({'error': 'Invalid token'}), 401
+        return f(user_id, *args, **kwargs)
+    return decorated
+
 
 # Helper function to save files and generate URLs
 def save_file(file, subfolder):
@@ -996,27 +1012,28 @@ def submit_speaking_answers(student_id, section_id):
     db.session.commit()
     return jsonify({'message': 'Speaking answers submitted successfully'}), 200
 
-@app.route('/speaking/<int:section_id>/review', methods=['GET'])
-@student_required
-def review_speaking_section(student_id, section_id):
+@app.route('/speaking/<int:section_id>/review/<int:student_id>', methods=['GET'])
+@token_required
+def review_speaking_section(user_id, student_id, section_id):
     try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        s_id = student_id
+        if user.role == 'student':
+            s_id = user.id
+
         # Verify the section exists and is a speaking section
         section = Section.query.filter_by(id=section_id, section_type='speaking').first()
         if not section:
             return jsonify({'error': 'Speaking section not found'}), 404
         
-        # Query submitted responses for the user in this section
-        # responses = SpeakingResponse.query.filter(
-        #     SpeakingResponse.user_id == student_id,
-        #     SpeakingResponse.task.has(section_id=section_id)
-        # ).order_by(
-        #     SpeakingResponse.task.task_number
-        # ).all()
         responses = db.session.query(SpeakingResponse, Score)\
         .join(SpeakingResponse.task)\
         .outerjoin(Score, Score.response_id == SpeakingResponse.id)\
         .filter(
-            SpeakingResponse.user_id == student_id,
+            SpeakingResponse.user_id == s_id,
             SpeakingTask.section_id == section_id
         )\
         .order_by(
