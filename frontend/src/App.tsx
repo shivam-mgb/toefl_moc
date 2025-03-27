@@ -20,6 +20,7 @@ import SpeakingSectionsPage from './pages/SpeakingSectionsPage';
 import WritingSectionsPage from './pages/WritingSectionsPage';
 import ReviewPage from './pages/ReviewPage';
 import SpeakingSectionReviewPage from './pages/SpeakingSectionReviewPage';
+import WritingSectionReviewPage from './pages/WritingSectionReviewPage';
 import AdminRoutes from './routes/AdminRoutes';
 
 import AddReadingSectionPage from './pages/admin/reading/AddReadingSectionPage';
@@ -28,6 +29,7 @@ import AddSpeakingSection from './pages/admin/speaking/AddSpeakingSection';
 import AddWritingSection from './pages/admin/writing/AddWritingSection';
 
 import SpeakingFeedbackPage from './pages/admin/speaking/SpeakingFeedbackPage';
+import WritingFeedbackPage from './pages/admin/writing/WritingFeedbackPage';
 
 import TestingPage from './pages/testingPage';
 
@@ -61,6 +63,8 @@ const App: React.FC = () => {
           <Route path="/review" element={<ReviewPage />} />
           <Route path='/review/speaking/:secId' element={<SpeakingSectionReviewPage />} />
           <Route path='/review/speaking/:secId/feedback/:studentId' element={<SpeakingFeedbackPage />} />
+          <Route path='/review/writing/:secId' element={<WritingSectionReviewPage />} />
+          <Route path='/review/writing/:secId/feedback/:studentId' element={<WritingFeedbackPage />} />
           
 
           {/* minimal section pages */}

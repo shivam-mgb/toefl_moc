@@ -1277,6 +1277,170 @@ def get_writing_sections():
         'sections': [{'id': section.id, 'title': section.title} for section in sections],
     }), 200
 
+@app.route('/writing/<int:section_id>/submit', methods=['POST'])
+@student_required
+def submit_writing_answers(student_id, section_id):
+    """
+    Expects JSON payload:
+    {
+        "answers": [
+            {"task_id": 1, "response_text": "Answer for task 1"},
+            {"task_id": 2, "response_text": "Answer for task 2"}
+        ]
+    }
+    """
+    try:
+        data = request.get_json()
+        answers = data.get('answers')
+        if len(answers) != 2:
+            return jsonify({'error': 'the request body is not of expected format'}), 400
+        # Verify the section exists and is a writing section
+        section = db.session.query(Section).filter_by(id=section_id, section_type='writing').first()
+        if not section:
+            return jsonify({'error': 'Section not found or not a writing section'}), 404
+
+        # Define expected task numbers
+        task_numbers = [1, 2]
+
+        tasks = WritingTask.query.filter(WritingTask.section_id == section.id).all()
+        # assers exactly two tasks are present
+        if len(tasks) != 2:
+            return jsonify({'error': 'Invalid task IDs or tasks not in specified section'}), 400
+
+
+        # Create WritingResponse entries
+        for task in tasks:
+            text = answers[f'task{task.task_number}']
+            word_count = len(text.split())  # Basic word count calculation
+            # Delete previous response audios for this user and task
+            prev_response = WritingResponse.query.filter_by(task_id=task.id, user_id=student_id).first()
+            if prev_response:
+                prev_response.response_text = text
+                prev_response.word_count = word_count
+            else:
+                new_response = WritingResponse(
+                    user_id=student_id,
+                    task_id=task.id,
+                    response_text=text,
+                    word_count=word_count
+                )
+                db.session.add(new_response)
+        db.session.commit()
+        return jsonify({'message': 'Writing answers submitted successfully'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
+@app.route('/writing/<int:section_id>/review/<int:student_id>', methods=['GET'])
+@token_required
+def review_writing_section(user_id, section_id, student_id):
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        s_id = student_id
+        if user.role == 'student':
+            s_id = user.id
+
+        if not section_id or not s_id:
+            return jsonify({'error': 'Missing section_id or student_id'}), 400
+
+        # Fetch responses with tasks and scores
+        responses = db.session.query(WritingResponse, WritingTask, Score)\
+            .join(WritingTask, WritingResponse.task_id == WritingTask.id)\
+            .outerjoin(Score, (Score.response_id == WritingResponse.id) & (Score.response_type == 'writing'))\
+            .filter(
+                WritingResponse.user_id == s_id,
+                WritingTask.section_id == section_id
+            )\
+            .order_by(WritingTask.task_number)\
+            .all()
+
+        if len(responses) != 2:
+            return jsonify({'error': 'Expected exactly 2 responses for this section'}), 404
+
+        result = [
+            {
+                'response_id': response.id,
+                'task_id': task.id,
+                'task_number': task.task_number,
+                'prompt': task.prompt,
+                'response_text': response.response_text,
+                'score': float(score.score) if score and score.score is not None else None,
+                'feedback': score.feedback if score and score.feedback is not None else None
+            }
+            for response, task, score in responses
+        ]
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
+@app.route('/writing/<int:section_id>/review', methods=['POST'])
+@admin_required_with_id
+def submit_writing_review(current_user_id, section_id):
+    """
+    Submit reviews for writing responses (2 tasks).
+    Expects JSON payload:
+    {
+        {"response_id": 1, "score": 85.0, "feedback": "Good structure"},
+        {"response_id": 2, "score": 90.0, "feedback": "Excellent analysis"}
+    }
+    """
+    try:
+        data = request.get_json()
+        if not data or len(data) != 2:
+            return jsonify({'error': 'Invalid input: Expected exactly 2 reviews'}), 400
+        
+        # Validate that the section exists and is a speaking section
+        section = db.session.query(Section).filter_by(id=section_id, section_type='writing').first()
+        if not section:
+            return jsonify({'error': 'Writing section not found'}), 404
+
+        for review in data:
+            response_id = review.get('response_id')
+            score_value = review.get('score')
+            feedback = review.get('feedback')
+
+            # Validate required fields
+            if not all([response_id, score_value is not None]):  # Feedback is optional
+                return jsonify({'error': f'Missing required fields for response_id {response_id}'}), 400
+
+            # Verify response exists
+            response = WritingResponse.query.get(response_id)
+            if not response:
+                return jsonify({'error': f'Response ID {response_id} not found'}), 404
+
+            # Validate score (assuming 0-100 range)
+            if not isinstance(score_value, (int, float)) or score_value < 0 or score_value > 100:
+                return jsonify({'error': f'Invalid score {score_value} for response_id {response_id}'}), 400
+
+            # Update or create score
+            existing_score = Score.query.filter_by(response_id=response_id, response_type='writing').first()
+            if existing_score:
+                existing_score.score = score_value
+                existing_score.feedback = feedback
+                existing_score.scored_by = current_user_id
+            else:
+                new_score = Score(
+                    response_id=response_id,
+                    response_type='writing',
+                    score=score_value,
+                    feedback=feedback,
+                    scored_by=current_user_id
+                )
+                db.session.add(new_score)
+
+        db.session.commit()
+        return jsonify({'message': 'Reviews submitted successfully'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
 # Create database tables
 with app.app_context():
     db.create_all()

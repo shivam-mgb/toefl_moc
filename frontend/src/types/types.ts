@@ -248,6 +248,18 @@ export interface WritingSectionResponse {
   task2: { passage: string; prompt: string };
 }
 
+export interface WritingTask {
+  response_id: number;
+  task_id: number;
+  task_number: number;
+  prompt: string;
+  response_text: string;
+  score: number | null;
+  feedback: string | null;
+}
+
+export type WritingSectionReview = WritingTask[];
+
 // Reading Section Interfaces
 export interface Passage {
   id?: string;

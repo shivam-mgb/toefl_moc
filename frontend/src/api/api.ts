@@ -22,6 +22,7 @@ import {
   ReadingSectionResponse,
   GetSections,
   SpeakingSectionReview,
+  WritingSectionReview,
 } from '../types/types';
 
 // Register a new user
@@ -358,6 +359,49 @@ export const fetchWritingSections = async (): Promise<GetSections> => {
 };
 
 
+export const fetchWritingSectionResponse = async (sectionId: string, studentId: string = '0'): Promise<WritingSectionReview> => {
+  const response = await fetch(`${BASE_URL}/writing/${sectionId}/review/${studentId}`, {
+    method: 'GET',
+    headers: {
+      ...getAuthHeaders(),
+      'Content-Type': 'application/json',
+    },
+  });
+
+  console.log('requested');
+  
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch writing sections');
+  }
+
+  return response.json();
+};
+
+export const submitWritingReview = async (
+  sectionId: string,
+  reviews: Array<{
+    response_id: number;
+    task_id: number;
+    score: number;
+    feedback: string;
+  }>
+): Promise<any> => {
+  const response = await fetch(`${BASE_URL}/writing/${sectionId}/review`, {
+    method: 'POST',
+    headers: {
+      ...getAuthHeaders(),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(reviews),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch writing sections');
+  }
+
+  return response.json();
+};
 
 
 // Reading section requests

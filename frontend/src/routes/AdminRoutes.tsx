@@ -5,15 +5,6 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import AdminDashboard from '../pages/admin/AdminDashboard';
 
 
-// Writing Pages
-import WritingTasksOverview from '../pages/admin/writing/WritingTasksOverview';
-import IntegratedPromptsList from '../pages/admin/writing/IntegratedPromptsList';
-import AddIntegratedPrompt from '../pages/admin/writing/AddIntegratedPrompt';
-import EditIntegratedPrompt from '../pages/admin/writing/EditIntegratedPrompt';
-import IndependentPromptsList from '../pages/admin/writing/IndependentPromptsList';
-import AddIndependentPrompt from '../pages/admin/writing/AddIndependentPrompt';
-import EditIndependentPrompt from '../pages/admin/writing/EditIndependentPrompt';
-
 // Section Creation Pages
 import SectionCreationLanding from '../pages/admin/section-creation/SectionCreationLanding';
 import CreateReadingSection from '../pages/admin/section-creation/CreateReadingSection';
@@ -39,13 +30,6 @@ const AdminRoutes: React.FC = () => {
 
       {/* Writing Section */}
       <Route path="/writing" element={<Navigate to="/admin/writing/overview" replace />} />
-      <Route path="/writing/overview" element={<WritingTasksOverview />} />
-      <Route path="/writing/integrated" element={<IntegratedPromptsList />} />
-      <Route path="/writing/integrated/add" element={<AddIntegratedPrompt />} />
-      <Route path="/writing/integrated/:id/edit" element={<EditIntegratedPrompt />} />
-      <Route path="/writing/independent" element={<IndependentPromptsList />} />
-      <Route path="/writing/independent/add" element={<AddIndependentPrompt />} />
-      <Route path="/writing/independent/:id/edit" element={<EditIndependentPrompt />} />
 
       {/* Section Creation */}
       <Route path="/section-creation" element={<SectionCreationLanding />} />
